@@ -20,7 +20,7 @@ mvn install:install-file -Dfile=D:\job-spring-boot-starter-1.0.RELEASE.jar -Dgro
 使用很简单，项目里引入坐标
 ```
 <dependency>
-    <groupId>com.job.task</groupId>
+    <groupId>com.github.task</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
     <version>1.0.RELEASE</version>
 </dependency>
