@@ -1,4 +1,4 @@
-# job-spring-boot-starter
+# task-spring-boot-starter
 
 #### 介绍
 自定义spring定时任务starter
@@ -20,7 +20,7 @@ mvn install:install-file -Dfile=D:\job-spring-boot-starter-1.0.RELEASE.jar -Dgro
 使用很简单，项目里引入坐标
 ```
 <dependency>
-    <groupId>com.github.chichengyu</groupId>
+    <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
     <version>1.0.RELEASE</version>
 </dependency>
