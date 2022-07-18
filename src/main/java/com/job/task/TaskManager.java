@@ -1,8 +1,8 @@
 package com.job.task;
 
-import com.alibaba.fastjson.JSON;
 import com.job.task.pojo.JobTask;
 import com.job.task.pojo.JobTaskLog;
+import com.job.util.JsonUtil;
 import com.job.util.R;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -161,7 +161,7 @@ public class TaskManager implements DisposableBean {
             LOGGER.info("定时任务[{}]准备执行", jobTask.getJobId());
             Object target = this.applicationContext.getBean(jobTask.getBeanName());
             Method method = target.getClass().getDeclaredMethod("run", String.class);
-            R<?> result = (R<?>)method.invoke(target, JSON.toJSONString(jobTask));
+            R<?> result = (R<?>)method.invoke(target, JsonUtil.toJson(jobTask));
             // 任务执行时长
             long times = System.currentTimeMillis() - startTime;
             jobLog.setTimes((int) times);
