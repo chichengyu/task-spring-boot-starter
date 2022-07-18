@@ -1,8 +1,5 @@
 package com.job.util;
 
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import java.io.Serializable;
 
 /**
@@ -10,7 +7,6 @@ import java.io.Serializable;
  * @date 2022/6/11 16:43
  * @desc R
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class R<T> implements Serializable {
     private static final long serialVersionUID = 7735505903525411467L;
     private static final int SUCCESS_CODE = 0;

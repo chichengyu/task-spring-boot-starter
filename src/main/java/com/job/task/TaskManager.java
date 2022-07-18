@@ -4,9 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.job.task.pojo.JobTask;
 import com.job.task.pojo.JobTaskLog;
 import com.job.util.R;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.boot.task.TaskSchedulerBuilder;
 import org.springframework.context.ApplicationContext;
@@ -27,30 +26,22 @@ import java.util.function.Consumer;
  * @date 2022/6/11 16:52
  * @desc SchudleManager
  */
-@Slf4j
 public class TaskManager implements DisposableBean {
-    @Setter
+    private static final Logger LOGGER = LoggerFactory.getLogger(TaskManager.class);
     private String prefix = "job_task_";
-    @Setter
     private int poolSize = 10;
-    @Setter
     private volatile ErrorHandler errorHandler;
     private ApplicationContext applicationContext;
-    // 正在运行的定时任务
-    @Getter
     private volatile ConcurrentHashMap<Long,ScheduledRealTaskFuture> taskContainer = new ConcurrentHashMap<>();
-    @Getter
     private TaskScheduler taskScheduler;
-    @Setter
     private Consumer<JobTaskLog> jobTaskLogSave;
-
     public TaskManager(){}
     public TaskManager(Consumer<JobTaskLog> jobTaskLogSave){
         this.jobTaskLogSave = jobTaskLogSave;
     }
 
     /**
-     * 初始化
+     * init
      * @param applicationContext
      */
     public void init(ApplicationContext applicationContext){
@@ -167,7 +158,7 @@ public class TaskManager implements DisposableBean {
         // 任务开始执行时间
         long startTime = System.currentTimeMillis();
         try {
-            log.info("定时任务[{}]准备执行", jobTask.getJobId());
+            LOGGER.info("定时任务[{}]准备执行", jobTask.getJobId());
             Object target = this.applicationContext.getBean(jobTask.getBeanName());
             Method method = target.getClass().getDeclaredMethod("run", String.class);
             R<?> result = (R<?>)method.invoke(target, JSON.toJSONString(jobTask));
@@ -179,9 +170,9 @@ public class TaskManager implements DisposableBean {
                 jobLog.setStatus(result.getCode());
                 jobLog.setMessage(result.getMsg());
             }
-            log.info("定时任务[{}]执行完毕，总共耗时：{}毫秒", jobTask.getJobId(),times);
+            LOGGER.info("定时任务[{}]执行完毕，总共耗时：{}毫秒", jobTask.getJobId(),times);
         }catch (Exception e){
-            log.error("定时任务[{}]执行失败，异常信息：{}", jobTask.getJobId(),e);
+            LOGGER.error("定时任务[{}]执行失败，异常信息：{}", jobTask.getJobId(),e);
             // 任务执行时长
             long times = System.currentTimeMillis() - startTime;
             // 任务状态    0：成功  1：失败  记录数据库
@@ -194,5 +185,33 @@ public class TaskManager implements DisposableBean {
                 jobTaskLogSave.accept(jobLog);
             }
         }
+    }
+
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
+    }
+
+    public void setPoolSize(int poolSize) {
+        this.poolSize = poolSize;
+    }
+
+    public void setErrorHandler(ErrorHandler errorHandler) {
+        this.errorHandler = errorHandler;
+    }
+
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+
+    public void setJobTaskLogSave(Consumer<JobTaskLog> jobTaskLogSave) {
+        this.jobTaskLogSave = jobTaskLogSave;
+    }
+
+    public ConcurrentHashMap<Long, ScheduledRealTaskFuture> getTaskContainer() {
+        return taskContainer;
+    }
+
+    public TaskScheduler getTaskScheduler() {
+        return taskScheduler;
     }
 }

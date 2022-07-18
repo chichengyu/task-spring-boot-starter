@@ -1,9 +1,5 @@
 package com.job.task.pojo;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.io.Serializable;
 import java.util.Date;
 
@@ -12,39 +8,121 @@ import java.util.Date;
  * @date 2022/6/11 16:45
  * @desc ScheduleJob
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class JobTask implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 任务id
+     * task id
      */
     private Long jobId;
     /**
-     * spring bean名称
+     * spring bean name
      */
     private String beanName;
     /**
-     * 参数
+     * params
      */
     private String params;
     /**
-     * cron表达式
+     * cron
      */
     private String cronExpression;
     /**
-     * 任务状态
+     * task status . 0 success 1 fail
      */
     private Integer status;
     /**
-     * 备注
+     * remarks
      */
     private String remark;
     /**
-     * 创建时间
+     * create time
      */
     private Date createTime;
 
+    public JobTask() {
+    }
+
+    public JobTask(Long jobId, String beanName, String params, String cronExpression, Integer status, String remark, Date createTime) {
+        this.jobId = jobId;
+        this.beanName = beanName;
+        this.params = params;
+        this.cronExpression = cronExpression;
+        this.status = status;
+        this.remark = remark;
+        this.createTime = createTime;
+    }
+
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
+    public Long getJobId() {
+        return jobId;
+    }
+
+    public void setJobId(Long jobId) {
+        this.jobId = jobId;
+    }
+
+    public String getBeanName() {
+        return beanName;
+    }
+
+    public void setBeanName(String beanName) {
+        this.beanName = beanName;
+    }
+
+    public String getParams() {
+        return params;
+    }
+
+    public void setParams(String params) {
+        this.params = params;
+    }
+
+    public String getCronExpression() {
+        return cronExpression;
+    }
+
+    public void setCronExpression(String cronExpression) {
+        this.cronExpression = cronExpression;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    @Override
+    public String toString() {
+        return "JobTask{" +
+                "jobId=" + jobId +
+                ", beanName='" + beanName + '\'' +
+                ", params='" + params + '\'' +
+                ", cronExpression='" + cronExpression + '\'' +
+                ", status=" + status +
+                ", remark='" + remark + '\'' +
+                ", createTime=" + createTime +
+                '}';
+    }
 }
