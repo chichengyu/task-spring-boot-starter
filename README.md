@@ -1,7 +1,7 @@
 # task-spring-boot-starter
 
 #### 介绍
-自定义spring定时任务starter
+自定义spring定时任务starter，sql可执行创建表
 
 #### 安装
 下载项目,cmd到项目根目录，打成jar，安装命令
@@ -11,7 +11,7 @@ mvn clean install
 ```
 如果下载了本地项目，执行如上安装命令后就无需执行后面命令；如果没有项目是jar包文件，那么执行命令进行安装到maven仓库
 ```
-mvn install:install-file -Dfile=D:\job-spring-boot-starter-1.0.RELEASE.jar -DgroupId=org.job -DartifactId=job-spring-boot-starter -Dversion=1.0.RELEASE -Dpackaging=jar
+mvn install:install-file -Dfile=D:\task-spring-boot-starter-1.0.RELEASE.jar -DgroupId=com.job.task -DartifactId=task-spring-boot-starter -Dversion=1.0.RELEASE -Dpackaging=jar
 ```
 在这段命令中，` -Dfile `参数指你自定义JAR包文件所在的路径，并依次指定了自定义的` GroupId `、` ArtifactId `和` Version `信息。 
 
@@ -35,9 +35,26 @@ public class TaskConfig {
 
     @Bean
     public TaskManager taskManager(ApplicationContext applicationContext){
-        TaskManager taskManager = new TaskManager(jobLog -> jobLogDao.save(jobLog));// 保存定时任务日志到数据库中
+        // 不需要记录日志到数据库
+        TaskManager taskManager = new TaskManager();
+        taskManager.setPoolSize(5);
+        taskManager.setPrefix("task_");
+        taskManager.setErrorHandler(e -> {
+            log.error("执行异常：{}",e);
+            // 可以给管理者发送邮件 ...
+        });
         taskManager.init(applicationContext);// 初始化，注入上下文
-        return taskManager;
+
+        // 需要记录日志到数据库
+        /*TaskManager taskManager = new TaskManager(jobLog -> jobLogDao.save(jobLog));// 保存定时任务日志到数据库中
+        taskManager.setPoolSize(5);
+        taskManager.setPrefix("task_");
+        taskManager.setErrorHandler(e -> {
+            log.error("执行异常：{}",e);
+            // 可以给管理者发送邮件 ...
+        });
+        taskManager.init(applicationContext);// 初始化，注入上下文
+        return taskManager;*/
     }
 }
 ```

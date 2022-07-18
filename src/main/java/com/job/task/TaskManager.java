@@ -5,6 +5,7 @@ import com.job.task.pojo.JobTask;
 import com.job.task.pojo.JobTaskLog;
 import com.job.util.R;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.boot.task.TaskSchedulerBuilder;
@@ -12,6 +13,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.config.CronTask;
+import org.springframework.util.ErrorHandler;
 
 import java.lang.reflect.Method;
 import java.util.Date;
@@ -27,16 +29,24 @@ import java.util.function.Consumer;
  */
 @Slf4j
 public class TaskManager implements DisposableBean {
+    @Setter
+    private String prefix = "job_task_";
+    @Setter
+    private int poolSize = 10;
+    @Setter
+    private volatile ErrorHandler errorHandler;
     private ApplicationContext applicationContext;
     // 正在运行的定时任务
     @Getter
-    private ConcurrentHashMap<Long,ScheduledRealTaskFuture> taskContainer = new ConcurrentHashMap<>();
+    private volatile ConcurrentHashMap<Long,ScheduledRealTaskFuture> taskContainer = new ConcurrentHashMap<>();
     @Getter
     private TaskScheduler taskScheduler;
-    private Consumer<JobTaskLog> scheduleJobLogConsumer;
+    @Setter
+    private Consumer<JobTaskLog> jobTaskLogSave;
 
-    public TaskManager(Consumer<JobTaskLog> scheduleJobLogConsumer){
-        this.scheduleJobLogConsumer = scheduleJobLogConsumer;
+    public TaskManager(){}
+    public TaskManager(Consumer<JobTaskLog> jobTaskLogSave){
+        this.jobTaskLogSave = jobTaskLogSave;
     }
 
     /**
@@ -45,11 +55,12 @@ public class TaskManager implements DisposableBean {
      */
     public void init(ApplicationContext applicationContext){
         ThreadPoolTaskScheduler taskScheduler = new TaskSchedulerBuilder()
-                .poolSize(10)
-                .threadNamePrefix("job_task_")
+                .poolSize(poolSize)
+                .threadNamePrefix(prefix)
                 .build();
         taskScheduler.setRemoveOnCancelPolicy(true);//是否将取消后的任务从队列删除
         taskScheduler.setWaitForTasksToCompleteOnShutdown(true);
+        taskScheduler.setErrorHandler(errorHandler);
         taskScheduler.initialize();
         this.taskScheduler = taskScheduler;
         this.applicationContext = applicationContext;
@@ -179,7 +190,9 @@ public class TaskManager implements DisposableBean {
             jobLog.setError(e.toString());
         }finally {
             // 最终记录到数据库
-            scheduleJobLogConsumer.accept(jobLog);
+            if (jobTaskLogSave != null){
+                jobTaskLogSave.accept(jobLog);
+            }
         }
     }
 }
