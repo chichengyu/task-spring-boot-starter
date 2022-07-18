@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 /**
  * @author xiaochi
  * @date 2022/6/11 16:52
- * @desc SchudleManager
+ * @desc TaskManager
  */
 public class TaskManager implements DisposableBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskManager.class);

@@ -20,7 +20,7 @@ public class JobTaskLog implements Serializable {
      */
     private Long jobId;
     /**
-     * spring bean name
+     * container bean name
      */
     private String beanName;
     /**
