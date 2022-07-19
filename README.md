@@ -3,18 +3,6 @@
 #### 介绍
 自定义spring定时任务starter，sql可执行创建表
 
-#### 安装
-下载项目,cmd到项目根目录，打成jar，安装命令
-```
-mvn clean install
-
-```
-如果下载了本地项目，执行如上安装命令后就无需执行后面命令；如果没有项目是jar包文件，那么执行命令进行安装到maven仓库
-```
-mvn install:install-file -Dfile=D:\task-spring-boot-starter-1.0.RELEASE.jar -DgroupId=com.job.task -DartifactId=task-spring-boot-starter -Dversion=1.0.RELEASE -Dpackaging=jar
-```
-在这段命令中，` -Dfile `参数指你自定义JAR包文件所在的路径，并依次指定了自定义的` GroupId `、` ArtifactId `和` Version `信息。 
-
 #### 使用说明
 
 使用很简单，项目里引入坐标
@@ -22,7 +10,7 @@ mvn install:install-file -Dfile=D:\task-spring-boot-starter-1.0.RELEASE.jar -Dgr
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.1.2.RELEASE</version>
+    <version>1.2.2.RELEASE</version>
 </dependency>
 ```
 创建一个配置文件 ` TaskConfig.java `
