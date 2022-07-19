@@ -31,7 +31,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
     private String prefix = "job_task_";
     private int poolSize = 10;
     private volatile ErrorHandler errorHandler;
-    private ApplicationContext applicationContext;
+    private static ApplicationContext applicationContext;
     private volatile ConcurrentHashMap<Long,ScheduledRealTaskFuture> taskContainer = new ConcurrentHashMap<>();
     private TaskScheduler taskScheduler;
     private Consumer<JobTaskLog> jobTaskLogSave;
@@ -43,8 +43,8 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
     @Override
     protected void initApplicationContext(ApplicationContext context) throws BeansException {
         super.initApplicationContext(context);
-        if (this.applicationContext == null){
-            this.applicationContext = context;
+        if (TaskManager.applicationContext == null){
+            TaskManager.applicationContext = context;
         }
     }
 
@@ -161,7 +161,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
         long startTime = System.currentTimeMillis();
         try {
             LOGGER.info("定时任务[{}]准备执行", jobTask.getJobId());
-            Object target = this.applicationContext.getBean(jobTask.getBeanName());
+            Object target = applicationContext.getBean(jobTask.getBeanName());
             Method method = target.getClass().getDeclaredMethod("run", String.class);
             R<?> result = (R<?>)method.invoke(target, JsonUtil.toJson(jobTask));
             // 任务执行时长
@@ -213,7 +213,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
         return taskScheduler;
     }
 
-    public ApplicationContext getContext() {
+    public static ApplicationContext getContext() {
         return applicationContext;
     }
 }
