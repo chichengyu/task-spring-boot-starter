@@ -90,6 +90,12 @@ public class TestController {
         jobTask.setRemark("测试");
         jobTask.setCreateTime(new Date());
         taskManager.addCronTask(jobTask);
+        // taskManager.updateCronTask(jobTask);// 更新任务
+        // taskManager.runNow(jobTask);// 立即执行
+        // taskManager.cancel(jobTask.getJobId());// 取消任务
+        // taskManager.refresh();// 批量添加任务
+        // 正在运行的任务
+        // ConcurrentHashMap<Long, TaskManager.ScheduledRealTaskFuture> taskContainer = taskManager.getTaskContainer();
         return "ok";
     }
 }

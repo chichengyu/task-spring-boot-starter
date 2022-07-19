@@ -133,7 +133,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
     /**
      * 取消任务的 ScheduledFuture
      */
-    private static class ScheduledRealTaskFuture{
+    public static class ScheduledRealTaskFuture{
         public volatile ScheduledFuture<?> future;
         /**
          * 取消定时任务
