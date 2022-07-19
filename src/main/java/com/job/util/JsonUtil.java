@@ -13,8 +13,6 @@ import java.util.List;
 
 /**
  * @author xiaochi
- * @date 2022/7/18 15:34
- * @desc JsonUtil
  */
 public class JsonUtil {
 
@@ -22,8 +20,6 @@ public class JsonUtil {
 
     /**
      * 实体转json
-     * @param o
-     * @return
      */
     public static String toJson(Object o){
         StringBuilder sb = new StringBuilder();
@@ -61,8 +57,6 @@ public class JsonUtil {
 
     /**
      * 获取本类及其父类的属性的方法
-     * @param clazz 当前类对象
-     * @return 字段数组
      */
     private static Field[] getAllFields(Class<?> clazz) {
         List<Field> fieldList = new ArrayList<>();
@@ -76,9 +70,6 @@ public class JsonUtil {
 
     /**
      * 根据属性名获取属性值
-     * @param fieldName 属性名称
-     * @param o 对象
-     * @return
      */
     private static Object getFieldValueByName(String fieldName, Object o) {
         try {

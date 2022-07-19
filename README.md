@@ -34,7 +34,7 @@ public class TaskConfig {
     private JobLogDao jobLogDao;// 需自行实现
 
     @Bean
-    public TaskManager taskManager(ApplicationContext applicationContext){
+    public TaskManager taskManager(){
         // 不需要记录日志到数据库
         TaskManager taskManager = new TaskManager();
         taskManager.setPoolSize(5);
@@ -43,7 +43,7 @@ public class TaskConfig {
             log.error("执行异常：{}",e);
             // 可以给管理者发送邮件 ...
         });
-        taskManager.init(applicationContext);// 初始化，注入上下文
+        taskManager.init();// 初始化
 
         // 需要记录日志到数据库
         /*TaskManager taskManager = new TaskManager(jobLog -> jobLogDao.save(jobLog));// 保存定时任务日志到数据库中
@@ -53,7 +53,7 @@ public class TaskConfig {
             log.error("执行异常：{}",e);
             // 可以给管理者发送邮件 ...
         });
-        taskManager.init(applicationContext);// 初始化，注入上下文
+        taskManager.init();// 初始化
         return taskManager;*/
     }
 }

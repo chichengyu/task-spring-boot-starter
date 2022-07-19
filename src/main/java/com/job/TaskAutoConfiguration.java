@@ -5,8 +5,6 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * @author xiaochi
- * @date 2022/7/15 11:21
- * @desc TaskAutoConfiguration
  */
 @Configuration
 @ConditionalOnProperty(name = "task.enabled",havingValue = "false")

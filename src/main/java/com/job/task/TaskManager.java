@@ -25,8 +25,6 @@ import java.util.function.Consumer;
 
 /**
  * @author xiaochi
- * @date 2022/6/11 16:52
- * @desc TaskManager
  */
 public class TaskManager extends ApplicationObjectSupport implements DisposableBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskManager.class);
@@ -79,7 +77,6 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
 
     /**
      * 创建并启动定时任务
-     * @param pojo
      */
     public void addCronTask(JobTask pojo){
         cancel(pojo.getJobId());
@@ -102,7 +99,6 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
 
     /**
      * 立即执行定时任务
-     * @param jobTask
      */
     public void runNow(JobTask jobTask){
         if (jobTask != null){
@@ -112,7 +108,6 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
 
     /**
      * 取消定时任务
-     * @param jobId
      */
     public void cancel(Long jobId){
         if (taskContainer.containsKey(jobId)){
@@ -153,7 +148,6 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
 
     /**
      * 定时任务执行且日志入库
-     * @param jobTask
      */
     private void execute(JobTask jobTask){
         //数据库保存执行记录

@@ -5,8 +5,6 @@ import java.util.Date;
 
 /**
  * @author xiaochi
- * @date 2022/6/11 16:44
- * @desc ScheduleJobLog
  */
 public class JobTaskLog implements Serializable {
     private static final long serialVersionUID = 1L;

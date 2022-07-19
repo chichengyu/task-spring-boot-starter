@@ -9,8 +9,6 @@ import java.lang.annotation.Target;
 
 /**
  * @author xiaochi
- * @date 2022/7/15 11:26
- * @desc EnabledTask
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
