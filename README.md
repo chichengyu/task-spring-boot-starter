@@ -22,7 +22,7 @@ mvn install:install-file -Dfile=D:\task-spring-boot-starter-1.0.RELEASE.jar -Dgr
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.0.RELEASE</version>
+    <version>1.1.2.RELEASE</version>
 </dependency>
 ```
 创建一个配置文件 ` TaskConfig.java `
