@@ -6,9 +6,11 @@ import com.job.util.JsonUtil;
 import com.job.util.R;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.boot.task.TaskSchedulerBuilder;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ApplicationObjectSupport;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.config.CronTask;
@@ -26,7 +28,7 @@ import java.util.function.Consumer;
  * @date 2022/6/11 16:52
  * @desc TaskManager
  */
-public class TaskManager implements DisposableBean {
+public class TaskManager extends ApplicationObjectSupport implements DisposableBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskManager.class);
     private String prefix = "job_task_";
     private int poolSize = 10;
@@ -40,11 +42,18 @@ public class TaskManager implements DisposableBean {
         this.jobTaskLogSave = jobTaskLogSave;
     }
 
+    @Override
+    protected void initApplicationContext(ApplicationContext context) throws BeansException {
+        super.initApplicationContext(context);
+        if (this.applicationContext == null){
+            this.applicationContext = context;
+        }
+    }
+
     /**
      * init
-     * @param applicationContext
      */
-    public void init(ApplicationContext applicationContext){
+    public void init(){
         ThreadPoolTaskScheduler taskScheduler = new TaskSchedulerBuilder()
                 .poolSize(poolSize)
                 .threadNamePrefix(prefix)
@@ -54,7 +63,6 @@ public class TaskManager implements DisposableBean {
         taskScheduler.setErrorHandler(errorHandler);
         taskScheduler.initialize();
         this.taskScheduler = taskScheduler;
-        this.applicationContext = applicationContext;
     }
 
     /**
@@ -199,10 +207,6 @@ public class TaskManager implements DisposableBean {
         this.errorHandler = errorHandler;
     }
 
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
-
     public void setJobTaskLogSave(Consumer<JobTaskLog> jobTaskLogSave) {
         this.jobTaskLogSave = jobTaskLogSave;
     }
@@ -213,5 +217,9 @@ public class TaskManager implements DisposableBean {
 
     public TaskScheduler getTaskScheduler() {
         return taskScheduler;
+    }
+
+    public ApplicationContext getContext() {
+        return applicationContext;
     }
 }
