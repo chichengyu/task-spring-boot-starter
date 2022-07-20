@@ -78,6 +78,7 @@
         </repository>
     </distributionManagement>
 
+    <!-- 发布 ：mvn clean install deploy -P release -->
     <build>
         <plugins>
             <plugin>
