@@ -26,7 +26,7 @@ public class JobTask implements Serializable {
      */
     private String cronExpression;
     /**
-     * task status . 0 success 1 fail
+     * task status . 0 open 1 disabled
      */
     private Integer status;
     /**

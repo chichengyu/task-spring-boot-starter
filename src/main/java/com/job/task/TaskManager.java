@@ -49,7 +49,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
     }
 
     /**
-     * init
+     * init.
      */
     public void init(){
         ThreadPoolTaskScheduler taskScheduler = new TaskSchedulerBuilder()
@@ -64,7 +64,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
     }
 
     /**
-     * 刷新所有定时任务
+     * refresh all task.
      */
     public void refresh(List<JobTask> taskPojoList) throws Exception {
         if (!taskPojoList.isEmpty()){
@@ -76,7 +76,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
     }
 
     /**
-     * 创建并启动定时任务
+     * create and start task.
      */
     public void addCronTask(JobTask pojo){
         cancel(pojo.getJobId());
@@ -90,7 +90,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
     }
 
     /**
-     * 更新定时任务
+     * update task.
      */
     public void updateCronTask(JobTask pojo) throws Exception {
         cancel(pojo.getJobId());
@@ -98,7 +98,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
     }
 
     /**
-     * 立即执行定时任务
+     * run now task.
      */
     public void runNow(JobTask jobTask){
         if (jobTask != null){
@@ -107,7 +107,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
     }
 
     /**
-     * 取消定时任务
+     * cancel task.
      */
     public void cancel(Long jobId){
         if (taskContainer.containsKey(jobId)){
@@ -120,7 +120,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
     }
 
     /**
-     * 销毁的时候停止定时任务
+     * destroy and cancel task.
      */
     @Override
     public void destroy(){
@@ -131,7 +131,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
     }
 
     /**
-     * 取消任务的 ScheduledFuture
+     * cancel task ScheduledFuture.
      */
     public static class ScheduledRealTaskFuture{
         public volatile ScheduledFuture<?> future;
@@ -147,7 +147,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
     }
 
     /**
-     * 定时任务执行且日志入库
+     * task db save
      */
     private void execute(JobTask jobTask){
         //数据库保存执行记录

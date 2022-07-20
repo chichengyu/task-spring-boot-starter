@@ -10,7 +10,7 @@
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.2.3.RELEASE</version>
+    <version>1.2.6.RELEASE</version>
 </dependency>
 ```
 创建一个配置文件 ` TaskConfig.java `
@@ -72,7 +72,7 @@ public class TestController {
         JobTask jobTask = new JobTask();
         jobTask.setBeanName("testTask");// TestTask 类的 BeanName名称
         jobTask.setJobId(100L);
-        jobTask.setStatus(0);// 0成功1失败
+        jobTask.setStatus(0);// 0正常1禁止   JobTaskLog 日志的 status 0代表定时任务运行结果成功 1失败
         jobTask.setParams("我是测试定时器");
         jobTask.setCronExpression("*/2 * * * * ?");
         jobTask.setRemark("测试");
