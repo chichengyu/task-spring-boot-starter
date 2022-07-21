@@ -8,7 +8,7 @@ import com.job.util.R;
 public interface ITask<T> {
 
     /**
-     * 执行定时任务接口
+     * task run excute
      */
     R<T> run(String params);
 }

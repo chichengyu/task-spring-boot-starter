@@ -10,7 +10,7 @@
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.2.6.RELEASE</version>
+    <version>1.2.7.RELEASE</version>
 </dependency>
 ```
 创建一个配置文件 ` TaskConfig.java `

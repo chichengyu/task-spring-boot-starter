@@ -52,10 +52,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
      * init.
      */
     public void init(){
-        ThreadPoolTaskScheduler taskScheduler = new TaskSchedulerBuilder()
-                .poolSize(poolSize)
-                .threadNamePrefix(prefix)
-                .build();
+        ThreadPoolTaskScheduler taskScheduler = new TaskSchedulerBuilder().poolSize(poolSize).threadNamePrefix(prefix).build();
         taskScheduler.setRemoveOnCancelPolicy(true);//是否将取消后的任务从队列删除
         taskScheduler.setWaitForTasksToCompleteOnShutdown(true);
         taskScheduler.setErrorHandler(errorHandler);
@@ -66,7 +63,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
     /**
      * refresh all task.
      */
-    public void refresh(List<JobTask> taskPojoList) throws Exception {
+    public void refresh(List<JobTask> taskPojoList){
         if (!taskPojoList.isEmpty()){
             destroy();
             for (JobTask pojo : taskPojoList){
@@ -80,9 +77,6 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
      */
     public void addCronTask(JobTask pojo){
         cancel(pojo.getJobId());
-        /*CronTask cronTask = new CronTask(() -> {
-            System.out.println("执行定时器【"+ pojo.getName() +"】任务:" + LocalDateTime.now().toLocalTime());
-        },pojo.getCron());*/
         CronTask cronTask = new CronTask(() -> execute(pojo),pojo.getCronExpression());
         ScheduledRealTaskFuture realTaskFuture = new ScheduledRealTaskFuture();
         realTaskFuture.future = taskScheduler.schedule(cronTask.getRunnable(), cronTask.getTrigger());
@@ -92,7 +86,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
     /**
      * update task.
      */
-    public void updateCronTask(JobTask pojo) throws Exception {
+    public void updateCronTask(JobTask pojo){
         cancel(pojo.getJobId());
         addCronTask(pojo);
     }
@@ -127,7 +121,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
         for (ScheduledRealTaskFuture future : taskContainer.values()){
             future.cancel();
         }
-        taskContainer.clear();// 清空容器
+        taskContainer.clear();
     }
 
     /**
@@ -136,7 +130,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
     public static class ScheduledRealTaskFuture{
         public volatile ScheduledFuture<?> future;
         /**
-         * 取消定时任务
+         * cancel task.
          */
         public void cancel() {
             ScheduledFuture<?> future = this.future;
@@ -150,14 +144,12 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
      * task db save
      */
     private void execute(JobTask jobTask){
-        //数据库保存执行记录
         //ScheduleJobLog jobLog = ScheduleJobLog.builder().jobId(scheduleJob.getJobId()).beanName(scheduleJob.getBeanName()).params(scheduleJob.getParams()).createTime(new Date()).build();
         JobTaskLog jobLog = new JobTaskLog();
         jobLog.setJobId(jobTask.getJobId());
         jobLog.setBeanName(jobTask.getBeanName());
         jobLog.setParams(jobTask.getParams());
         jobLog.setCreateTime(new Date());
-        // 任务开始执行时间
         long startTime = System.currentTimeMillis();
         try {
             LOGGER.info("定时任务[{}]准备执行", jobTask.getJobId());
@@ -182,7 +174,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
             jobLog.setStatus(1);
             jobLog.setError(e.toString());
         }finally {
-            // 最终记录到数据库
+            // final save db
             if (jobTaskLogSave != null){
                 jobTaskLogSave.accept(jobLog);
             }
