@@ -31,7 +31,7 @@ logging:
     <version>1.2.10.RELEASE</version>
 </dependency>
 ```
-创建任务Bean类  ` TestTask `，需要实现接口 ` ITask<string> `
+创建任务Bean类  ` TestTask `，需要实现接口 ` com.job.task.ITask<string> `
 ```
 @Component("testTask")
 public class TestTask implements ITask<String> {
@@ -44,7 +44,7 @@ public class TestTask implements ITask<String> {
             System.out.println(jobTask.toString());
             // 逻辑处理... 
             return R.ok();
-        } catch (BeansException e) {
+        } catch (Exception e) {
             // 会将异常信息记录到 JobTaskLog 的 error 成员中
             return R.error(e.toString());
         }
@@ -96,6 +96,7 @@ public class TaskConfig {
             log.error("执行异常：{}",e);
             // 可以给管理者发送邮件 ...
         });
+        //taskManager.setJobTaskLogSave(jobLog -> jobLogDao.save(jobLog));//也可以这样设置
         taskManager.init();// 初始化
         return taskManager;*/
     }
@@ -146,6 +147,7 @@ public class TaskQuartzConfig {
      */
     @Bean
     public SchedulerFactoryBean schedulerFactoryBean(){
+    //public SchedulerFactoryBean schedulerFactoryBean(DataSource dataSource){
         // 默认内存方式 org.quartz.simpl.RAMJobStore
         SchedulerFactoryBean factoryBean = TaskQuartzManager.getSchedulerFactoryBean();
         /* 可选，默认在 TaskQuartzManager.getSchedulerFactoryBean() 中已经进行配置了
@@ -160,6 +162,7 @@ public class TaskQuartzConfig {
 
         /* 这是笔者项目中使用的持久化配置
         SchedulerFactoryBean factory = new SchedulerFactoryBean();// 也可 TaskQuartzManager.getSchedulerFactoryBean();创建，进行覆盖设置
+        factory.setDataSource(dataSource);
         //quartz参数
         Properties prop = new Properties();
         prop.put("org.quartz.scheduler.instanceName", "TaskScheduler");
@@ -169,16 +172,16 @@ public class TaskQuartzConfig {
         prop.put("org.quartz.threadPool.threadCount", "20");
         prop.put("org.quartz.threadPool.threadPriority", "5");
         //JobStore配置
-        //prop.put("org.quartz.jobStore.class", "org.quartz.impl.jdbcjobstore.JobStoreTX");
-        //prop.put("org.quartz.jobStore.class", "org.quartz.simpl.RAMJobStore");
+        prop.put("org.quartz.jobStore.class", "org.quartz.impl.jdbcjobstore.JobStoreTX");
+        prop.put("org.quartz.jobStore.class", "org.quartz.simpl.RAMJobStore");
         //集群配置
-        //prop.put("org.quartz.jobStore.isClustered", "false");// 集群时一定要设置为 true
-        //prop.put("org.quartz.jobStore.clusterCheckinInterval", "15000");
-        //prop.put("org.quartz.jobStore.maxMisfiresToHandleAtATime", "1");
+        prop.put("org.quartz.jobStore.isClustered", "false");// 集群时一定要设置为 true
+        prop.put("org.quartz.jobStore.clusterCheckinInterval", "15000");
+        prop.put("org.quartz.jobStore.maxMisfiresToHandleAtATime", "1");
 
-        //prop.put("org.quartz.jobStore.misfireThreshold", "12000");
-        //prop.put("org.quartz.jobStore.tablePrefix", "QRTZ_");
-        //prop.put("org.quartz.jobStore.selectWithLockSQL", "SELECT * FROM {0}LOCKS UPDLOCK WHERE LOCK_NAME = ?");
+        prop.put("org.quartz.jobStore.misfireThreshold", "12000");
+        prop.put("org.quartz.jobStore.tablePrefix", "QRTZ_");
+        prop.put("org.quartz.jobStore.selectWithLockSQL", "SELECT * FROM {0}LOCKS UPDLOCK WHERE LOCK_NAME = ?");
 
         //PostgreSQL数据库，需要打开此注释
         //prop.put("org.quartz.jobStore.driverDelegateClass", "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate");
@@ -196,16 +199,21 @@ public class TaskQuartzConfig {
         return factoryBean;
     }
 
+    @Autowired
+    private JobLogDao jobLogDao;// 保存到数据库,需自行实现
+
     /**
      * 创建一个 TaskQuartzManager 用于管理任务
      * @return
      */
     @Bean
     public TaskQuartzManager taskQuartzManager(){
-        TaskQuartzManager taskQuartzManager = new TaskQuartzManager(jobTaskLog -> log.info("日志，[{}]",jobTaskLog));// 此处可以把任务日志保存到数据库
+        // 把任务日志保存到数据库
+        //TaskQuartzManager taskQuartzManager = new TaskQuartzManager(jobTaskLog -> jobLogDao.save(jobTaskLog));
+        TaskQuartzManager taskQuartzManager = new TaskQuartzManager();
         taskQuartzManager.setSchedulerFactoryBean(schedulerFactoryBean());
-        //taskQuartzManager.setJobTaskLogSave(jobTaskLog -> log.info("日志，[{}]",jobTaskLog));// 此处可以把任务日志保存到数据库
-        taskQuartzManager.init();
+        taskQuartzManager.setJobTaskLogSave(jobTaskLog -> log.info("日志，[{}]",jobTaskLog));// 此处可以把任务日志保存到数据库
+        taskQuartzManager.init();// 初始化
         return taskQuartzManager;
     }
 }
