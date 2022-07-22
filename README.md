@@ -1,7 +1,7 @@
 # task-spring-boot-starter
 
 ## 介绍
-自定义spring定时任务starter，sql可执行创建表,有两种方式：  
+自定义spring定时任务starter，sql可执行创建表。有两种使用方式： 
   - `spring自带的 TaskScheduler (持久化时执行 sql/job.sql) `  
   - `Quartz 的使用 (持久化时执行 sql/quartz.sql )`
 
@@ -15,12 +15,20 @@ logging:
 
 #### 使用说明
 
-使用很简单，项目里引入坐标
+使用很简单，项目里引入坐标，`<= 1.2.7.RELEASE `(使用spring自带的 ` TaskScheduler `,没有集成 ` Quartz `)
 ```
+<!-- 使用spring自带的 TaskScheduler -->
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
     <version>1.2.7.RELEASE</version>
+</dependency>
+
+<!-- 1.2.10.RELEASE开始集成 Quartz -->
+<dependency>
+    <groupId>io.github.chichengyu</groupId>
+    <artifactId>task-spring-boot-starter</artifactId>
+    <version>1.2.10.RELEASE</version>
 </dependency>
 ```
 创建任务Bean类  ` TestTask `，需要实现接口 ` ITask<string> `
@@ -44,6 +52,22 @@ public class TestTask implements ITask<String> {
 }
 ``` 
 ### 方式一(spring自带的 TaskScheduler)
+这引入依赖，可排除多余的 ` Quartz 依赖`,也可以引入之前的 ` 1.2.7.RELEASE `版本
+```
+<!-- 1.2.10.RELEASE开始集成 Quartz -->
+<dependency>
+    <groupId>io.github.chichengyu</groupId>
+    <artifactId>task-spring-boot-starter</artifactId>
+    <version>1.2.10.RELEASE</version>
+    <!-- 方式一可排除 Quartz -->
+    <exclusions>
+        <exclusion>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-quartz</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+```
 创建一个配置文件 ` TaskConfig.java `
 ```
 @Configuration
@@ -109,11 +133,11 @@ public class TestController {
 ```
 然后启动项目，访问接口，即可看到定时任务执行。
 ### 方式二(Quartz方式)
-创建一个配置文件 ` QuartzTaskConfig.java `
+创建一个配置文件 ` TaskQuartzConfig.java `
 ```
 @Slf4j
 @Configuration
-public class QuartzConfig {
+public class TaskQuartzConfig {
 
     /**
      * 必须创建一个 SchedulerFactoryBean 加入到spring容器
@@ -122,18 +146,20 @@ public class QuartzConfig {
      */
     @Bean
     public SchedulerFactoryBean schedulerFactoryBean(){
+        // 默认内存方式 org.quartz.simpl.RAMJobStore
         SchedulerFactoryBean factoryBean = TaskQuartzManager.getSchedulerFactoryBean();
+        /* 可选，默认在 TaskQuartzManager.getSchedulerFactoryBean() 中已经进行配置了
         Properties prop = new Properties();
-        prop.put("org.quartz.scheduler.instanceName", "TaskScheduler");
-        prop.put("org.quartz.scheduler.instanceId", "AUTO");
-        prop.put("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
-        prop.put("org.quartz.threadPool.threadCount", "20");
-        prop.put("org.quartz.threadPool.threadPriority", "5");
-        factoryBean.setQuartzProperties(prop);
+        prop.put("org.quartz.scheduler.instanceName", "TaskScheduler");// 可自定义
+        prop.put("org.quartz.scheduler.instanceId", "AUTO");// 可自定义
+        prop.put("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");// 可自定义
+        prop.put("org.quartz.threadPool.threadCount", "20");// 可自定义线程
+        prop.put("org.quartz.threadPool.threadPriority", "5");// 可自定义
+        factoryBean.setQuartzProperties(prop);*/
         factoryBean.setStartupDelay(5);// 项目启动后5s后开始执行任务
 
         /* 这是笔者项目中使用的持久化配置
-        SchedulerFactoryBean factory = new SchedulerFactoryBean();
+        SchedulerFactoryBean factory = new SchedulerFactoryBean();// 也可 TaskQuartzManager.getSchedulerFactoryBean();创建，进行覆盖设置
         //quartz参数
         Properties prop = new Properties();
         prop.put("org.quartz.scheduler.instanceName", "TaskScheduler");
