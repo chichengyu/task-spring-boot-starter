@@ -1,5 +1,5 @@
 -- task-spring-boot-starter
--- quartz.sql (quartz使用时执行sql)
+-- 方式二：quartz.sql (quartz持久化屎执行sql)
 -- ----------------------------
 -- Table structure for qrtz_blob_triggers
 -- ----------------------------

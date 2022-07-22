@@ -1,7 +1,11 @@
 # task-spring-boot-starter
 
 ## 介绍
-自定义spring定时任务starter，sql可执行创建表,有两种方式：1.`spring自带的 TaskScheduler `,2.`Quartz 的使用`。如果想看` debug `日志，需要在项目配置文件` application.yml `配置
+自定义spring定时任务starter，sql可执行创建表,有两种方式：  
+  - `spring自带的 TaskScheduler (持久化时执行 sql/job.sql) `  
+  - `Quartz 的使用 (持久化时执行 sql/quartz.sql )`
+
+如果要查看任务` debug `日志，需要在项目配置文件` application.yml `配置
 ```
 logging:
   level:
