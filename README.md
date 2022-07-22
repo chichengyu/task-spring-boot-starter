@@ -160,8 +160,9 @@ public class TaskQuartzConfig {
         factoryBean.setQuartzProperties(prop);*/
         factoryBean.setStartupDelay(5);// 项目启动后5s后开始执行任务
 
-        /* 这是笔者项目中使用的持久化配置
-        SchedulerFactoryBean factory = new SchedulerFactoryBean();// 也可 TaskQuartzManager.getSchedulerFactoryBean();创建，进行覆盖设置
+        /*// 这是笔者项目中使用的持久化配置
+        //SchedulerFactoryBean factory = TaskQuartzManager.getSchedulerFactoryBean();//也可进行覆盖设置
+        SchedulerFactoryBean factory = new SchedulerFactoryBean();
         factory.setDataSource(dataSource);
         //quartz参数
         Properties prop = new Properties();
@@ -172,8 +173,9 @@ public class TaskQuartzConfig {
         prop.put("org.quartz.threadPool.threadCount", "20");
         prop.put("org.quartz.threadPool.threadPriority", "5");
         //JobStore配置
-        prop.put("org.quartz.jobStore.class", "org.quartz.impl.jdbcjobstore.JobStoreTX");
-        prop.put("org.quartz.jobStore.class", "org.quartz.simpl.RAMJobStore");
+        //quartz版本不同可能此配置也不同，如启动报错(就是此配置原因)：org.quartz.SchedulerConfigException: DataSource name not set
+        //prop.put("org.quartz.jobStore.class", "org.quartz.impl.jdbcjobstore.JobStoreTX");
+        prop.put("org.quartz.jobStore.class", "org.springframework.scheduling.quartz.LocalDataSourceJobStore");
         //集群配置
         prop.put("org.quartz.jobStore.isClustered", "false");// 集群时一定要设置为 true
         prop.put("org.quartz.jobStore.clusterCheckinInterval", "15000");
@@ -213,6 +215,7 @@ public class TaskQuartzConfig {
         TaskQuartzManager taskQuartzManager = new TaskQuartzManager();
         taskQuartzManager.setSchedulerFactoryBean(schedulerFactoryBean);
         taskQuartzManager.setJobTaskLogSave(jobTaskLog -> log.info("日志，[{}]",jobTaskLog));// 此处可以把任务日志保存到数据库
+        //taskQuartzManager.setJobNamePrefix("aaaa_");// 可设置任务名称前缀
         taskQuartzManager.init();// 初始化
         return taskQuartzManager;
     }
