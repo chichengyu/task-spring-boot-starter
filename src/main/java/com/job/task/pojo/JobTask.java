@@ -24,7 +24,7 @@ public class JobTask implements Serializable {
     /**
      * cron
      */
-    private String cronExpression;
+    private String cron;
     /**
      * task status . 0 open 1 disabled
      */
@@ -41,11 +41,11 @@ public class JobTask implements Serializable {
     public JobTask() {
     }
 
-    public JobTask(Long jobId, String beanName, String params, String cronExpression, Integer status, String remark, Date createTime) {
+    public JobTask(Long jobId, String beanName, String params, String cron, Integer status, String remark, Date createTime) {
         this.jobId = jobId;
         this.beanName = beanName;
         this.params = params;
-        this.cronExpression = cronExpression;
+        this.cron = cron;
         this.status = status;
         this.remark = remark;
         this.createTime = createTime;
@@ -79,12 +79,12 @@ public class JobTask implements Serializable {
         this.params = params;
     }
 
-    public String getCronExpression() {
-        return cronExpression;
+    public String getCron() {
+        return cron;
     }
 
-    public void setCronExpression(String cronExpression) {
-        this.cronExpression = cronExpression;
+    public void setCron(String cron) {
+        this.cron = cron;
     }
 
     public Integer getStatus() {
@@ -117,7 +117,7 @@ public class JobTask implements Serializable {
                 "jobId=" + jobId +
                 ", beanName='" + beanName + '\'' +
                 ", params='" + params + '\'' +
-                ", cronExpression='" + cronExpression + '\'' +
+                ", cron='" + cron + '\'' +
                 ", status=" + status +
                 ", remark='" + remark + '\'' +
                 ", createTime=" + createTime +

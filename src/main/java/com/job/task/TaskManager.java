@@ -58,6 +58,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
         taskScheduler.setErrorHandler(errorHandler);
         taskScheduler.initialize();
         this.taskScheduler = taskScheduler;
+        LOGGER.info("TaskManager init finish.");
     }
 
     /**
@@ -77,7 +78,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
      */
     public void addCronTask(JobTask pojo){
         cancel(pojo.getJobId());
-        CronTask cronTask = new CronTask(() -> execute(pojo),pojo.getCronExpression());
+        CronTask cronTask = new CronTask(() -> execute(pojo),pojo.getCron());
         ScheduledRealTaskFuture realTaskFuture = new ScheduledRealTaskFuture();
         realTaskFuture.future = taskScheduler.schedule(cronTask.getRunnable(), cronTask.getTrigger());
         taskContainer.put(pojo.getJobId(),realTaskFuture);
@@ -152,7 +153,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
         jobLog.setCreateTime(new Date());
         long startTime = System.currentTimeMillis();
         try {
-            LOGGER.info("定时任务[{}]准备执行", jobTask.getJobId());
+            LOGGER.debug("任务[{}]准备执行", jobTask.getJobId());
             Object target = applicationContext.getBean(jobTask.getBeanName());
             Method method = target.getClass().getDeclaredMethod("run", String.class);
             R<?> result = (R<?>)method.invoke(target, JsonUtil.toJson(jobTask));
@@ -164,9 +165,9 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
                 jobLog.setStatus(result.getCode());
                 jobLog.setMessage(result.getMsg());
             }
-            LOGGER.info("定时任务[{}]执行完毕，总共耗时：{}毫秒", jobTask.getJobId(),times);
+            LOGGER.debug("任务[{}]执行完毕,耗时:{}毫秒", jobTask.getJobId(),times);
         }catch (Exception e){
-            LOGGER.error("定时任务[{}]执行失败，异常信息：{}", jobTask.getJobId(),e);
+            LOGGER.error("任务[{}]执行失败,异常信息:{}", jobTask.getJobId(),e);
             // 任务执行时长
             long times = System.currentTimeMillis() - startTime;
             // 任务状态    0：成功  1：失败  记录数据库
