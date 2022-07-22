@@ -1,9 +1,23 @@
 # task-spring-boot-starter
+<p align="left">
+    <a href="https://github.com/chichengyu/task-spring-boot-starter">
+        <img src="https://img.shields.io/badge/%E4%BD%9C%E8%80%85-%E5%B0%8F%E6%B1%A0-%23129e50" alt="MIT License" />
+    </a>
+    <a href="https://github.com/chichengyu/task-spring-boot-starter">
+        <img src="https://img.shields.io/badge/version-1.2.7.RELEASE-blue" alt="version-1.2.7.RELEASE" />
+    </a>
+    <a href="https://github.com/chichengyu/task-spring-boot-starter">
+        <img src="https://img.shields.io/badge/version-1.2.11.RELEASE-orange" alt="version-1.2.11.RELEASE" />
+    </a>
+</p>
 
 ## 介绍
-自定义spring定时任务starter，sql可执行创建表。有两种使用方式： 
-  - `spring自带的 TaskScheduler (持久化时执行 sql/job.sql) `  
-  - `Quartz 的使用 (持久化时执行 sql/quartz.sql )`
+自定义spring定时任务starter，sql可执行创建表。有两种使用方式：   
+ - :heavy_check_mark: 方式1: [spring中的 TaskScheduler](#spring中的TaskScheduler) ` (持久化时执行 sql/job.sql) `
+ - :heavy_check_mark: 方式2: [Quartz 任务调度框架](#Quartz任务调度框架) ` (持久化时执行 sql/quartz.sql )`
+
+:warning:注：sql文件 ` job_task 任务表`/ ` job_task_log 任务日志表`，需要持久化的可以创建表，在添加任务的同时插入表中。
+
 
 如果要查看任务` debug `日志，需要在项目配置文件` application.yml `配置
 ```
@@ -11,27 +25,28 @@ logging:
   level:
     com.job.task: debug
 ```
-重启项目，可以看到控制台任务` debug `日志已经打印了。
+重启项目，可以看到控制台任务` debug `日志已经打印了。:rocket::rocket::rocket::rocket::rocket::rocket:
 
 #### 使用说明
-
-使用很简单，项目里引入坐标，`<= 1.2.7.RELEASE `(使用spring自带的 ` TaskScheduler `,没有集成 ` Quartz `)
+:lollipop:使用很简单，项目里引入坐标，`<= 1.2.7.RELEASE `(使用spring自带的 ` TaskScheduler `,没有集成 ` Quartz `)
 ```
-<!-- 使用spring自带的 TaskScheduler -->
+<!-- 使用spring中的 TaskScheduler -->
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
     <version>1.2.7.RELEASE</version>
 </dependency>
-
-<!-- 1.2.10.RELEASE开始集成 Quartz -->
+```
+` 1.2.11.RELEASE ` 开始集成 ` Quartz `，也支持:heart:`spring自带的 TaskScheduler(使用时排除Quartz依赖`):heart:  
+```
+<!-- 1.2.11.RELEASE开始集成 Quartz -->
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.2.10.RELEASE</version>
+    <version>1.2.11.RELEASE</version>
 </dependency>
 ```
-创建任务Bean类  ` TestTask `，需要实现接口 ` com.job.task.ITask<string> `
+第1步:point_right:：创建任务Bean类  ` TestTask `,需要实现接口 ` com.job.task.ITask<string> `,多个定时器(`创建多个任务Bean类实现接口ITask<string>`)
 ```
 @Component("testTask")
 public class TestTask implements ITask<String> {
@@ -40,7 +55,7 @@ public class TestTask implements ITask<String> {
     public R<String> run(String params) {
         System.out.println("测试定时任务执行了，参数:"+params);
         try {
-            JobTask jobTask = JSON.parseObject(s, JobTask.class);
+            JobTask jobTask = JSON.parseObject(params, JobTask.class);
             System.out.println(jobTask.toString());
             // 逻辑处理... 
             return R.ok();
@@ -51,15 +66,18 @@ public class TestTask implements ITask<String> {
     }
 }
 ``` 
-### 方式一(spring自带的 TaskScheduler)
-这引入依赖，可排除多余的 ` Quartz 依赖`,也可以引入之前的 ` 1.2.7.RELEASE `版本
+第2步:point_right:：就是创建配置文件` TaskConfig `/` TaskQuartzConfig `与任务管理` TaskManager `/` TaskQuartzManager `，持久化都需要添加任务时插入 ` job_task 任务表 `/ ` job_task_log 任务日志表 `,只是不同的是 `Quartz`还有自己的表(不需要我们管)，我们只需要关心` job_task 任务表 `/ ` job_task_log 任务日志表 `，需要我们记录到数据库。:baby_chick::baby_chick::baby_chick::baby_chick::baby_chick::baby_chick:
+
+第3步:point_right:：就是参考下面2个使用方式，分别创建对应的配置文件` TaskConfig `/` TaskQuartzConfig `与任务管理` TaskManager `/` TaskQuartzManager `，进行增删改查。
+### [spring中的TaskScheduler](#使用说明)
+:pushpin: 引入依赖,:lollipop:排除多余的 ` Quartz 依赖`,:lollipop:也可以引入之前的 ` 1.2.7.RELEASE `版本
 ```
-<!-- 1.2.10.RELEASE开始集成 Quartz -->
+<!-- 1.2.11.RELEASE开始集成 Quartz -->
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.2.10.RELEASE</version>
-    <!-- 方式一可排除 Quartz -->
+    <version>1.2.11.RELEASE</version>
+    <!-- 方式一(spring中的TaskScheduler)，排除 Quartz -->
     <exclusions>
         <exclusion>
             <groupId>org.springframework.boot</groupId>
@@ -68,13 +86,14 @@ public class TestTask implements ITask<String> {
     </exclusions>
 </dependency>
 ```
-创建一个配置文件 ` TaskConfig.java `
+:zap::zap::zap: 一定要排除`Quartz依赖` :zap::zap::zap:,虽然不影响，但总归使用项目更简洁:heart::heart::heart:  
+:lollipop:创建一个配置文件 ` TaskConfig.java `
 ```
 @Configuration
 public class TaskConfig {
 
     @Autowired
-    private JobLogDao jobLogDao;// 保存到数据库,需自行实现
+    private JobTaskLogDao jobTaskLogDao;// 保存到数据库,需自行实现，提供的 sql/JobTaskLogDao 表
 
     @Bean
     public TaskManager taskManager(){
@@ -89,16 +108,16 @@ public class TaskConfig {
         taskManager.init();// 初始化
 
         // 需要记录日志到数据库
-        /*TaskManager taskManager = new TaskManager(jobLog -> jobLogDao.save(jobLog));// 保存定时任务日志到数据库中
+        /*TaskManager taskManager = new TaskManager(jobLog -> jobTaskLogDao.save(jobLog));// 保存定时任务日志到数据库中
         taskManager.setPoolSize(5);
         taskManager.setPrefix("task_");
         taskManager.setErrorHandler(e -> {
             log.error("执行异常：{}",e);
             // 可以给管理者发送邮件 ...
         });
-        //taskManager.setJobTaskLogSave(jobLog -> jobLogDao.save(jobLog));//也可以这样设置
-        taskManager.init();// 初始化
-        return taskManager;*/
+        //taskManager.setJobTaskLogSave(jobLog -> jobTaskLogDao.save(jobLog));//也可以这样设置
+        taskManager.init();// 初始化 */
+        return taskManager;
     }
 }
 ```
@@ -110,6 +129,8 @@ public class TestController {
 
     @Autowired
     private TaskManager taskManager;
+    @Autowired
+    private JobTaskDao jobTaskDao;
 
     @GetMapping("/task/add")
     public String add() {
@@ -121,6 +142,7 @@ public class TestController {
         jobTask.setCron("*/2 * * * * ?");
         jobTask.setRemark("测试");
         jobTask.setCreateTime(new Date());
+        jobTaskDao.save(jobTask);// 同时持久化保存到自定义的 job_task 表中
         taskManager.addCronTask(jobTask);
         // taskManager.updateCronTask(jobTask);// 更新任务
         // taskManager.runNow(jobTask);// 立即执行
@@ -132,13 +154,17 @@ public class TestController {
     }
 }
 ```
-然后启动项目，访问接口，即可看到定时任务执行。
-### 方式二(Quartz方式)
-创建一个配置文件 ` TaskQuartzConfig.java `
+然后启动项目，访问接口，即可看到定时任务执行。:dango::dango::dango::dango::dango::dango::dango::dango::dango::dango::dango::dango:
+
+### [Quartz任务调度框架](#使用说明)
+:pushpin: 创建一个配置文件 ` TaskQuartzConfig.java `
 ```
 @Slf4j
 @Configuration
 public class TaskQuartzConfig {
+
+    @Autowired
+    private JobTaskLogDao jobTaskLogDao;// 保存到数据库,需自行实现，提供的 sql/JobTaskLogDao 表
 
     /**
      * 必须创建一个 SchedulerFactoryBean 加入到spring容器
@@ -201,9 +227,6 @@ public class TaskQuartzConfig {
         return factoryBean;
     }
 
-    @Autowired
-    private JobLogDao jobLogDao;// 保存到数据库,需自行实现
-
     /**
      * 创建一个 TaskQuartzManager 用于管理任务
      * @return
@@ -211,7 +234,7 @@ public class TaskQuartzConfig {
     @Bean
     public TaskQuartzManager taskQuartzManager(SchedulerFactoryBean schedulerFactoryBean){
         // 把任务日志保存到数据库
-        //TaskQuartzManager taskQuartzManager = new TaskQuartzManager(jobTaskLog -> jobLogDao.save(jobTaskLog));
+        //TaskQuartzManager taskQuartzManager = new TaskQuartzManager(jobTaskLog -> jobTaskLogDao.save(jobTaskLog));
         TaskQuartzManager taskQuartzManager = new TaskQuartzManager();
         taskQuartzManager.setSchedulerFactoryBean(schedulerFactoryBean);
         taskQuartzManager.setJobTaskLogSave(jobTaskLog -> log.info("日志，[{}]",jobTaskLog));// 此处可以把任务日志保存到数据库
@@ -229,6 +252,8 @@ public class TestController {
 
     @Autowired
     private TaskQuartzManager taskQuartzManager;
+    @Autowired
+    private JobTaskDao jobTaskDao;
 
     @GetMapping("/task/add")
     public String add() {
@@ -241,8 +266,9 @@ public class TestController {
         jobTask.setRemark("测试");
         jobTask.setCreateTime(new Date());
         taskQuartzManager.addCronTask(jobTask);
+        jobTaskDao.save(jobTask);// 同时持久化保存到自定义的 job_task 表中
         return "ok";
     }
 }
 ```
-启动项目，可以看到定时任务启动了。
+启动项目，可以看到定时任务启动了。:heart_eyes::heart_eyes::heart_eyes::heart_eyes::heart_eyes::heart_eyes::heart_eyes::heart_eyes::heart_eyes::heart_eyes::heart_eyes::heart_eyes::heart_eyes::heart_eyes::heart_eyes:

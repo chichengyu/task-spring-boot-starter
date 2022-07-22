@@ -1,5 +1,5 @@
 -- task-spring-boot-starter
--- 方式一：spring自带的 TaskScheduler(持久化屎执行sql)
+-- 方式一：spring自带的 TaskScheduler(持久化执行sql)
 
 DROP TABLE IF EXISTS `job_task`;
 CREATE TABLE `job_task` (

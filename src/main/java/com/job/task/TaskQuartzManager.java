@@ -260,7 +260,6 @@ public class TaskQuartzManager extends ApplicationObjectSupport {
         @Override
         protected void executeInternal(JobExecutionContext jobExecutionContext){
             JobTask jobTask = (JobTask) jobExecutionContext.getMergedJobDataMap().get(TaskQuartzManager.jobParamKey);
-            LOGGER.info("参数[{}]",jobTask);
             //数据库保存执行记录
             JobTaskLog jobTaskLog = new JobTaskLog();
             jobTaskLog.setJobId(jobTask.getJobId());
