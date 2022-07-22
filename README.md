@@ -207,11 +207,11 @@ public class TaskQuartzConfig {
      * @return
      */
     @Bean
-    public TaskQuartzManager taskQuartzManager(){
+    public TaskQuartzManager taskQuartzManager(SchedulerFactoryBean schedulerFactoryBean){
         // 把任务日志保存到数据库
         //TaskQuartzManager taskQuartzManager = new TaskQuartzManager(jobTaskLog -> jobLogDao.save(jobTaskLog));
         TaskQuartzManager taskQuartzManager = new TaskQuartzManager();
-        taskQuartzManager.setSchedulerFactoryBean(schedulerFactoryBean());
+        taskQuartzManager.setSchedulerFactoryBean(schedulerFactoryBean);
         taskQuartzManager.setJobTaskLogSave(jobTaskLog -> log.info("日志，[{}]",jobTaskLog));// 此处可以把任务日志保存到数据库
         taskQuartzManager.init();// 初始化
         return taskQuartzManager;
