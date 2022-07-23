@@ -58,7 +58,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
         taskScheduler.setErrorHandler(errorHandler);
         taskScheduler.initialize();
         this.taskScheduler = taskScheduler;
-        LOGGER.info("TaskManager init finish.");
+        LOGGER.info("TaskManager init finished.");
     }
 
     /**

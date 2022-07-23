@@ -7,7 +7,7 @@
         <img src="https://img.shields.io/badge/version-1.2.7.RELEASE-blue" alt="version-1.2.7.RELEASE" />
     </a>
     <a href="https://github.com/chichengyu/task-spring-boot-starter">
-        <img src="https://img.shields.io/badge/version-1.2.12.RELEASE-orange" alt="version-1.2.12.RELEASE" />
+        <img src="https://img.shields.io/badge/version-1.3.3.RELEASE-orange" alt="version-1.3.3.RELEASE" />
     </a>
 </p>
 
@@ -28,7 +28,7 @@ logging:
 重启项目，可以看到控制台任务` debug `日志已经打印了。:rocket::rocket::rocket::rocket::rocket::rocket:
 
 #### 使用说明
-:lollipop:使用很简单，项目里引入坐标，`<= 1.2.7.RELEASE `(使用spring自带的 ` TaskScheduler `,没有集成 ` Quartz `)
+:lollipop:使用很简单，项目里引入坐标，`1.2.7.RELEASE `(使用spring自带的 ` TaskScheduler `,没有集成 ` Quartz `)
 ```
 <!-- 使用spring中的 TaskScheduler -->
 <dependency>
@@ -37,13 +37,13 @@ logging:
     <version>1.2.7.RELEASE</version>
 </dependency>
 ```
-` 1.2.12.RELEASE ` 开始集成 ` Quartz `，也支持:heart:`spring自带的 TaskScheduler(使用时排除Quartz依赖`):heart:  
+` 1.3.3.RELEASE ` 开始集成 ` Quartz `，也支持:heart:[`spring自带的 TaskScheduler(使用时排除Quartz依赖`)](#spring中的TaskScheduler):heart:  
 ```
-<!-- 1.2.12.RELEASE开始集成 Quartz -->
+<!-- 1.3.3.RELEASE开始集成 Quartz -->
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.2.12.RELEASE</version>
+    <version>1.3.3.RELEASE</version>
 </dependency>
 ```
 第1步:point_right:：创建任务Bean类  ` TestTask `,需要实现接口 ` com.job.task.ITask<string> `,多个定时器(`创建多个任务Bean类实现接口ITask<string>`)
@@ -60,7 +60,7 @@ public class TestTask implements ITask<String> {
             // 逻辑处理... 
             return R.ok();
         } catch (Exception e) {
-            // 会将异常信息记录到 JobTaskLog 的 error 成员中
+            // 会将异常信息记录到 JobTaskLog 的 message 成员属性中
             return R.error(e.toString());
         }
     }
@@ -72,11 +72,11 @@ public class TestTask implements ITask<String> {
 ### [spring中的TaskScheduler](#使用说明)
 :pushpin: 引入依赖,:lollipop:排除多余的 ` Quartz 依赖`,:lollipop:也可以引入之前的 ` 1.2.7.RELEASE `版本
 ```
-<!-- 1.2.12.RELEASE开始集成 Quartz -->
+<!-- 1.3.3.RELEASE开始集成 Quartz -->
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.2.12.RELEASE</version>
+    <version>1.3.3.RELEASE</version>
     <!-- 方式一(spring中的TaskScheduler)，排除 Quartz -->
     <exclusions>
         <exclusion>

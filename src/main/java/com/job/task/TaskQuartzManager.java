@@ -95,7 +95,7 @@ public class TaskQuartzManager extends ApplicationObjectSupport {
      * init.
      */
     public void init(){
-        LOGGER.info("TaskQuartzManager init finish.");
+        LOGGER.info("TaskQuartzManager init finished.");
         if (this.schedulerFactoryBean == null){
             this.schedulerFactoryBean = TaskQuartzManager.getSchedulerFactoryBean();
         }
@@ -282,7 +282,7 @@ public class TaskQuartzManager extends ApplicationObjectSupport {
                     jobTaskLog.setStatus(result.getCode());
                     jobTaskLog.setMessage(result.getMsg());
                 }
-                LOGGER.debug("任务[{}]执行完毕,总共耗时:{}毫秒", jobTask.getJobId(),times);
+                LOGGER.debug("任务[{}]执行完毕,耗时:{}毫秒", jobTask.getJobId(),times);
             } catch (Exception e) {
                 LOGGER.error("任务[{}]执行失败,异常信息:{}", jobTask.getJobId(),e);
                 // 任务执行时长
