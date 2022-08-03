@@ -1,9 +1,8 @@
-package com.job.util;
+package com.job.excel;
 
-import com.job.annotation.Excel;
+import com.job.excel.annotation.Excel;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
-import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -184,7 +183,7 @@ public class ExcelUtil<T> {
             CellType cellType = cell.getCellType();
             if (cellType == CellType.NUMERIC || cellType == CellType.FORMULA){
                 value = cell.getNumericCellValue();
-                if (HSSFDateUtil.isCellDateFormatted(cell)){
+                if (DateUtil.isCellDateFormatted(cell)){
                     value = DateUtil.getJavaDate((Double) value); // POI Excel 日期格式转换
                 }else {
                     if ((Double) value % 1 > 0) {

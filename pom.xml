@@ -6,11 +6,11 @@
 
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.3.4.RELEASE</version>
+    <version>1.3.5.RELEASE</version>
     <packaging>jar</packaging>
     <name>task-spring-boot-starter</name>
     <url>https://github.com/chichengyu/task-spring-boot-starter</url>
-    <description>基于spring的定时任务工具</description>
+    <description>基于spring的定时任务工具与常用工具包</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -56,7 +56,7 @@
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
-            <version>4.1.0</version>
+            <version>5.2.0</version>
         </dependency>
     </dependencies>
 

@@ -1,14 +1,15 @@
 ## Excel 工具使用
+Excel的工具类，方便导入与导出
 
 ##### 使用说明
-首先导包
+如果单纯使用 ` Excel `工具, 导包
 ```
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.3.4.RELEASE</version>
+    <version>1.3.5.RELEASE</version>
+    <!-- 排除多余 quartz  -->
     <exclusions>
-        <!-- 排除多余 quartz  -->
         <exclusion>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-quartz</artifactId>
@@ -16,8 +17,26 @@
     </exclusions>
 </dependency>
 ```
-
-有两种使用方式：
+如果只是使用` 1.3.5.RELEASE ` 版本的 ` task任务导包坐标 `，虽然不排除也没什么影响，但可以使项目体量小一些，导包
+```
+<dependency>
+    <groupId>io.github.chichengyu</groupId>
+    <artifactId>task-spring-boot-starter</artifactId>
+    <version>1.3.5.RELEASE</version>
+    <!-- 排除多余 tomcat / excel -->
+    <exclusions>
+        <exclusion>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+```
+使用方式，参考下面，两种使用方式：
  + [使用` Excel `注解](#Excel注解)
  + [不使用注解(扩展性强,适用于随意组合的集合数据)](#不使用注解)
 
