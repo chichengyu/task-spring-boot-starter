@@ -36,6 +36,7 @@ import java.util.Map;
 
 /**
  * Excel工具类
+ * @author xiaochi
  */
 public class ExcelUtil<T> {
     private static final int START_ROW_NUM=1;// 默认第1行，表头不算
@@ -232,7 +233,7 @@ public class ExcelUtil<T> {
         HSSFWorkbook wb = null;
         try{
             wb = createHSSFWorkbook(fileName, getHeaders(), data);
-            fileName = System.currentTimeMillis() + fileName + ".xls";
+            fileName = (fileName.contains(".xls")||fileName.contains(".xlsx")) ? fileName : (fileName + ".xlsx");
             /* ajax方式是先生成一个文件在服务器端，前端进行下载
             out = new FileOutputStream(fileName);
             wb.write(out);
@@ -243,12 +244,14 @@ public class ExcelUtil<T> {
             out.flush();
             out.close();
             return fileName;
-        }catch (Exception e){
-            throw e;
-        }finally {
+        } finally {
             try{
-                if (wb != null)wb.close();
-                if (out != null)out.close();
+                if (wb != null){
+                    wb.close();
+                }
+                if (out != null){
+                    out.close();
+                }
             }catch (Exception e){
                 e.printStackTrace();
             }
@@ -491,7 +494,7 @@ public class ExcelUtil<T> {
         HSSFWorkbook wb = null;
         try{
             wb = getHSSFWorkbook(fileName, headers, data);
-            fileName = System.currentTimeMillis() + fileName + ".xls";
+            fileName = (fileName.contains(".xls")||fileName.contains(".xlsx")) ? fileName : (fileName + ".xlsx");
             fileName = URLEncoder.encode(fileName,"UTF-8");
             fileName = new String(fileName.getBytes(), "ISO8859-1");
             //response.setContentType("application/vnd.ms-excel");// 导出流
@@ -504,12 +507,14 @@ public class ExcelUtil<T> {
             out.flush();
             out.close();
             return fileName;
-        }catch (Exception e){
-            throw e;
-        }finally {
+        } finally {
             try{
-                if (wb != null)wb.close();
-                if (out != null)out.close();
+                if (wb != null){
+                    wb.close();
+                }
+                if (out != null){
+                    out.close();
+                }
             }catch (Exception e){
                 e.printStackTrace();
             }
