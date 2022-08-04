@@ -238,8 +238,7 @@ public class ExcelUtil<T> {
             out = new FileOutputStream(fileName);
             wb.write(out);
             return R.ok(fileName)*/;
-            setResponseHeader(fileName,response);
-            out = response.getOutputStream();
+            out = setResponseHeader(fileName,response).getOutputStream();
             wb.write(out);
             out.flush();
             out.close();
@@ -413,7 +412,7 @@ public class ExcelUtil<T> {
      * param fileName
      * param response
      */
-    private void setResponseHeader(String fileName,HttpServletResponse response) throws Exception {
+    private HttpServletResponse setResponseHeader(String fileName,HttpServletResponse response) throws Exception {
         fileName = URLEncoder.encode(fileName,"UTF-8");
         fileName = new String(fileName.getBytes(), "ISO8859-1");
         //response.setContentType("application/vnd.ms-excel");// 导出流
@@ -421,6 +420,7 @@ public class ExcelUtil<T> {
         response.setHeader("Content-Disposition", "attachment;filename=" + fileName);
         response.addHeader("Pargam", "no-cache");
         response.addHeader("Cache-Control", "no-cache");
+        return response;
     }
 
     //---------------------------------------------- 不使用注解 ---------------------------------------------------------
