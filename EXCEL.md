@@ -7,7 +7,7 @@ Excel的工具类，方便导入与导出
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.3.8.RELEASE</version>
+    <version>1.3.9.RELEASE</version>
     <!-- 排除多余 quartz  -->
     <exclusions>
         <exclusion>
@@ -17,12 +17,12 @@ Excel的工具类，方便导入与导出
     </exclusions>
 </dependency>
 ```
-如果只是使用` 1.3.8.RELEASE ` 版本的 ` task定时任务`，可以参考下面导包坐标(排除多余依赖)，也可以直接使用之前版本[1.3.3.RELEASE](https://github.com/chichengyu/task-spring-boot-starter)，虽然不排除也没什么影响，但可以使项目体量小一些，导包
+如果只是使用` 1.3.9.RELEASE ` 版本的 ` task定时任务`，可以参考下面导包坐标(排除多余依赖)，也可以直接使用之前版本[1.3.3.RELEASE](https://github.com/chichengyu/task-spring-boot-starter)，虽然不排除也没什么影响，但可以使项目体量小一些，导包
 ```
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.3.8.RELEASE</version>
+    <version>1.3.9.RELEASE</version>
     <!-- 排除多余 excel -->
     <exclusions>
         <exclusion>
@@ -47,40 +47,31 @@ Excel的工具类，方便导入与导出
 public class TestPojo implements Serializable {
     private static final long serialVersionUID = -169520293430625480L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Excel(name = "ID")
+    @Excel(name = "ID",height = 32,lock = false,autoHeight = true)
     private Integer id;
 
-    @Excel(name = "名称",suffix = "(单位%)")
+    @Excel(name = "名称",suffix = "(单位%)",wrap = true,backgroundColor = 12,color = 15)
     private String name;
 
     @Excel(name = "创建日期",width = 20,dateformat = "yyyy-MM-dd HH:mm:ss")
-    @Transient
     private Date createTime;
 
-    @Excel(name = "年龄",readConverterExp = "0=男,1=女,2=未知")
-    @Transient
+    @Excel(name = "年龄",converExp = "0=男,1=女,2=未知")
     private Integer age;
 
-    @Excel(name = "测试数字默认值")
-    @Transient
+    @Excel(name = "测试数字默认值",height = 5,lock = false)
     private Integer num;
 
-    @Excel(name = "测试数字默认值1",readConverterExp = "100=差,200=良好,300=优秀")
-    @Transient
+    @Excel(name = "测试数字默认值1",converExp = "100=差,200=良好,300=优秀")
     private Integer aa;
 
-    @Excel(name = "测试数字默认值2",readConverterExp = "100=差,200=良好,300=优秀")
-    @Transient
+    @Excel(name = "测试数字默认值2",converExp = "100=差,200=良好,300=优秀")
     private Long bb;
 
-    @Excel(name = "测试数字默认值3",readConverterExp = "100.00=差,200.00=良好,300.00=优秀")
-    @Transient
+    @Excel(name = "测试数字默认值3",converExp = "100.00=差,200.00=良好,300.00=优秀")
     private Float cc;
 
-    @Excel(name = "测试数字默认值4",readCoverDefaultValue = true, readConverterExp = "100.00=差,200.00=良好,300.00=优秀")
-    @Transient
+    @Excel(name = "测试数字默认值4",readDefaultValue = true, converExp = "100.00=差,200.00=良好,300.00=优秀")
     private Double dd;
 }
 ```

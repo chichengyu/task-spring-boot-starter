@@ -10,6 +10,7 @@ import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
@@ -123,7 +124,7 @@ public class ExcelUtil<T> {
                                 if (!"".equals(suffix) && val.toString().contains(suffix)){
                                     val = val.toString().replace(suffix,"");
                                 }
-                                if (excel.readCoverDefaultValue()){
+                                if (excel.readDefaultValue()){
                                     String defaultValue = excel.defaultValue();
                                     if (!"".equals(defaultValue) && val.toString().contains(defaultValue)){
                                         val = val.toString().replace(defaultValue,"");
@@ -133,9 +134,9 @@ public class ExcelUtil<T> {
                                         }
                                     }
                                 }
-                                String converterExp = excel.readConverterExp();
-                                if (!"".equals(converterExp)){
-                                    val = reverseByExp(String.valueOf(val),converterExp);
+                                String converExp = excel.converExp();
+                                if (!"".equals(converExp)){
+                                    val = reverseByExp(String.valueOf(val),converExp);
                                 }
                                 try {
                                     if (String.class == fieldType){
@@ -234,10 +235,6 @@ public class ExcelUtil<T> {
         try{
             wb = createHSSFWorkbook(fileName, getHeaders(), data);
             fileName = (fileName.contains(".xls")||fileName.contains(".xlsx")) ? fileName : (fileName + ".xlsx");
-            /* ajax方式是先生成一个文件在服务器端，前端进行下载
-            out = new FileOutputStream(fileName);
-            wb.write(out);
-            return R.ok(fileName)*/;
             out = setResponseHeader(fileName,response).getOutputStream();
             wb.write(out);
             out.flush();
@@ -301,12 +298,14 @@ public class ExcelUtil<T> {
         hssfCellStyle.setBorderTop(BorderStyle.THIN);
         //设置表内容样式
         //创建单元格，并设置值表头 设置表头居中
-        HSSFCellStyle style1 = hssfWorkbook.createCellStyle();
-        style1.setAlignment(HorizontalAlignment.CENTER);   //设置居中样式
+        /*HSSFCellStyle style1 = hssfWorkbook.createCellStyle();
+        style1.setLocked(false);
         style1.setBorderBottom(BorderStyle.THIN);
         style1.setBorderLeft(BorderStyle.THIN);
         style1.setBorderRight(BorderStyle.THIN);
         style1.setBorderTop(BorderStyle.THIN);
+        style1.setAlignment(HorizontalAlignment.CENTER);   //设置居中样式*/
+
         //产生标题行
         HSSFRow hssfRow = hssfSheet.createRow(0);
         HSSFCell cell = hssfRow.createCell(0);
@@ -327,11 +326,18 @@ public class ExcelUtil<T> {
             for (Field field : this.fields){
                 if (field.isAnnotationPresent(Excel.class)){
                     Excel excel = field.getAnnotation(Excel.class);
+                    if (!excel.autoHeight()){
+                        row1.setHeightInPoints(excel.height());
+                    }
                     // 设置列宽
                     hssfSheet.setColumnWidth(k,(int)((excel.width() + 0.72) * 256));
                     //将内容按顺序赋给对应列对象
                     HSSFCell hssfCell = row1.createCell(k++);
-                    hssfCell.setCellStyle(style1);
+                    // 单元格是否锁定,不可修改
+                    if (excel.lock()) {
+                        hssfSheet.protectSheet(excel.lockPassword());
+                    }
+                    hssfCell.setCellStyle(setCellStyle(excel,hssfWorkbook.createCellStyle(),hssfWorkbook.createFont()));
                     field.setAccessible(true);
                     String defaultValue = excel.defaultValue();
                     Object val = field.get(t);
@@ -340,13 +346,13 @@ public class ExcelUtil<T> {
                     }
                     if (val != null){
                         String suffix = excel.suffix();
-                        String converterExp = excel.readConverterExp();
+                        String converExp = excel.converExp();
                         Class<?> fieldType = field.getType();
                         if (!"".equals(suffix)){
                             val += suffix;
                         }
-                        if (!"".equals(converterExp)){
-                            hssfCell.setCellValue(convertByExp(String.valueOf(val),converterExp));
+                        if (!"".equals(converExp)){
+                            hssfCell.setCellValue(convertByExp(String.valueOf(val),converExp));
                             continue;
                         }
                         if (String.class == fieldType){
@@ -376,12 +382,40 @@ public class ExcelUtil<T> {
     }
 
     /**
+     * 创建并设置单元格
+     * param excel
+     * param style
+     */
+    private HSSFCellStyle setCellStyle(Excel excel,HSSFCellStyle style,Font font){
+        // 创建锁定的单元格
+        //HSSFCellStyle style2 = hssfWorkbook.createCellStyle();
+        style.setLocked(excel.lock());
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setAlignment(HorizontalAlignment.CENTER);//设置居中样式
+        style.setWrapText(excel.wrap());// 是否自动换行
+        font.setFontHeightInPoints(excel.fontSize());
+        //font.setColor(HSSFColor.HSSFColorPredefined.BLACK.getIndex()); //字体颜色
+        font.setColor(excel.color()); //字体颜色
+        style.setFont(font);
+        //设置单元格颜色（颜色对应枚举会放在下面）
+        //style.setFillForegroundColor(HSSFColor.HSSFColorPredefined.WHITE.getIndex());
+        style.setFillForegroundColor(excel.backgroundColor());
+        //全部填充 （填充枚举对应的样式也会放在下面）
+        //style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        return style;
+    }
+
+    /**
      * 解析导出值 0=男,1=女,2=未知
      * param propertyValue 参数值
      * param converterExp 翻译注解
      */
-    private String convertByExp(String propertyValue, String converterExp){
-        String[] convertSource = converterExp.split(",");
+    private String convertByExp(String propertyValue, String converExp){
+        String[] convertSource = converExp.split(",");
         for (String item : convertSource){
             String[] itemArray = item.split("=");
             if (itemArray[0].equals(propertyValue)){
@@ -396,8 +430,8 @@ public class ExcelUtil<T> {
      * param propertyValue 参数值
      * param converterExp 翻译注解
      */
-    private String reverseByExp(String propertyValue, String converterExp){
-        String[] convertSource = converterExp.split(",");
+    private String reverseByExp(String propertyValue, String converExp){
+        String[] convertSource = converExp.split(",");
         for (String item : convertSource){
             String[] itemArray = item.split("=");
             if (itemArray[1].equals(propertyValue)){
