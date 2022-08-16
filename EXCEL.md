@@ -7,7 +7,7 @@ Excel的工具类，方便导入与导出
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.3.9.RELEASE</version>
+    <version>1.3.10.RELEASE</version>
     <!-- 排除多余 quartz  -->
     <exclusions>
         <exclusion>
@@ -17,12 +17,12 @@ Excel的工具类，方便导入与导出
     </exclusions>
 </dependency>
 ```
-如果只是使用` 1.3.9.RELEASE ` 版本的 ` task定时任务`，可以参考下面导包坐标(排除多余依赖)，也可以直接使用之前版本[1.3.3.RELEASE](https://github.com/chichengyu/task-spring-boot-starter)，虽然不排除也没什么影响，但可以使项目体量小一些，导包
+如果只是使用` 1.3.10.RELEASE ` 版本的 ` task定时任务`，可以参考下面导包坐标(排除多余依赖)，也可以直接使用之前版本[1.3.3.RELEASE](https://github.com/chichengyu/task-spring-boot-starter)，虽然不排除也没什么影响，但可以使项目体量小一些，导包
 ```
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.3.9.RELEASE</version>
+    <version>1.3.10.RELEASE</version>
     <!-- 排除多余 excel -->
     <exclusions>
         <exclusion>
@@ -37,7 +37,7 @@ Excel的工具类，方便导入与导出
  + [不使用注解(扩展性强,适用于随意组合的集合数据)](#不使用注解)
 
 ### [Excel注解](#使用说明)
-首先在实体上加上 ` Excel ` 注解，如：实体 ` TestPojo `
+首先在实体上加上 ` Excel ` 注解(还有很多属性,可自行查看注解里说明)，如：实体 ` TestPojo `
 ```
 @Data
 @Builder
@@ -47,19 +47,19 @@ Excel的工具类，方便导入与导出
 public class TestPojo implements Serializable {
     private static final long serialVersionUID = -169520293430625480L;
 
-    @Excel(name = "ID",height = 32,lock = false,autoHeight = true)
+    @Excel(name = "ID",height = 32,lock = true,autoHeight = false)
     private Integer id;
 
-    @Excel(name = "名称",suffix = "(单位%)",wrap = true,backgroundColor = 12,color = 15)
+    @Excel(name = "名称",width = 32,suffix = "(单位%)",wrap = true,backgroundColor = IndexedColors.DARK_GREEN,color = IndexedColors.BRIGHT_GREEN)
     private String name;
 
     @Excel(name = "创建日期",width = 20,dateformat = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 
-    @Excel(name = "年龄",converExp = "0=男,1=女,2=未知")
+    @Excel(name = "年龄",converExp = "0=男,1=女,2=未知",fontSize = 20)
     private Integer age;
 
-    @Excel(name = "测试数字默认值",height = 5,lock = false)
+    @Excel(name = "测试数字默认值",lock = true)
     private Integer num;
 
     @Excel(name = "测试数字默认值1",converExp = "100=差,200=良好,300=优秀")
@@ -122,6 +122,41 @@ public class ExcelTestController extends BaseController{
         }
         //excel文件名
         ExcelUtil<TestPojo> excelUtil = new ExcelUtil<>(TestPojo.class);
+        //excelUtil.export(response,"用户信息表",list);
+        // 此时可以设置表头样式（不设置也可以）
+        excelUtil.setHeaderStyle(hssfWorkbook -> {
+            HSSFCellStyle headerStyle = hssfWorkbook.createCellStyle();
+            headerStyle.setAlignment(HorizontalAlignment.CENTER);   //设置水平居中样式
+            headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);   //设置上下居中样式
+            headerStyle.setBorderBottom(BorderStyle.THIN);
+            headerStyle.setBorderLeft(BorderStyle.THIN);
+            headerStyle.setBorderRight(BorderStyle.THIN);
+            headerStyle.setBorderTop(BorderStyle.THIN);
+            // 如果设置背景色 BackgroundColor 无效，必须调用 ForegroundColor,且必须在调用 setFillPattern 才能生效
+            headerStyle.setFillForegroundColor(IndexedColors.DARK_RED.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            return headerStyle;
+        });
+        // 此时可以设置标题样式（不设置也可以）
+        excelUtil.setTitleStyle(hssfWorkbook -> {
+            HSSFCellStyle style = hssfWorkbook.createCellStyle();
+            style.setAlignment(HorizontalAlignment.CENTER);   //设置水平居中样式
+            style.setVerticalAlignment(VerticalAlignment.CENTER);   //设置上下居中样式
+            style.setBorderBottom(BorderStyle.THIN);
+            style.setBorderLeft(BorderStyle.THIN);
+            style.setBorderRight(BorderStyle.THIN);
+            style.setBorderTop(BorderStyle.THIN);
+            // 如果设置背景色 BackgroundColor 无效，必须调用 ForegroundColor,且必须在调用 setFillPattern 才能生效
+            style.setFillForegroundColor(IndexedColors.RED.getIndex());
+            style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            //设置标题字体
+            Font titleFont = hssfWorkbook.createFont();
+            titleFont.setFontHeightInPoints((short) 14);
+            titleFont.setColor(IndexedColors.DARK_YELLOW.getIndex());
+            titleFont.setBold(true);
+            style.setFont(titleFont);
+            return style;
+        });
         excelUtil.export(response,"用户信息表",list);
     }
 }

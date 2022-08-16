@@ -41,8 +41,15 @@ import java.util.Map;
  */
 public class ExcelUtil<T> {
     private static final int START_ROW_NUM=1;// 默认第1行，表头不算
+    private Style titleStyle;// 标题样式
+    private Style headerStyle;// 表头样式
     private Class<T> clazz;
     private Field[] fields;
+
+    @FunctionalInterface
+    public interface Style{
+        HSSFCellStyle execute(HSSFWorkbook hssfWorkbook);
+    }
 
     public ExcelUtil(Class<T> clazz){
         this.clazz = clazz;
@@ -281,21 +288,40 @@ public class ExcelUtil<T> {
         HSSFSheet hssfSheet = hssfWorkbook.createSheet(title);
         //创建标题合并行
         hssfSheet.addMergedRegion(new CellRangeAddress(0,(short)0,0,(short)headers.size() - 1));
-        //设置标题样式
-        HSSFCellStyle style = hssfWorkbook.createCellStyle();
-        style.setAlignment(HorizontalAlignment.CENTER);   //设置居中样式
-        style.setVerticalAlignment(VerticalAlignment.CENTER);
-        //设置标题字体
-        Font titleFont = hssfWorkbook.createFont();
-        titleFont.setFontHeightInPoints((short) 14);
-        style.setFont(titleFont);
-        //设置值表头样式 设置表头居中
-        HSSFCellStyle hssfCellStyle = hssfWorkbook.createCellStyle();
-        hssfCellStyle.setAlignment(HorizontalAlignment.CENTER);   //设置居中样式
-        hssfCellStyle.setBorderBottom(BorderStyle.THIN);
-        hssfCellStyle.setBorderLeft(BorderStyle.THIN);
-        hssfCellStyle.setBorderRight(BorderStyle.THIN);
-        hssfCellStyle.setBorderTop(BorderStyle.THIN);
+        //产生标题行
+        HSSFRow hssfRow = hssfSheet.createRow(0);
+        HSSFCell cell = hssfRow.createCell(0);
+        cell.setCellValue(title);
+        //设置默认标题样式
+        if (this.titleStyle == null){
+            HSSFCellStyle style = hssfWorkbook.createCellStyle();
+            style.setAlignment(HorizontalAlignment.CENTER);   //设置居中样式
+            style.setVerticalAlignment(VerticalAlignment.CENTER);
+            //设置标题字体
+            Font titleFont = hssfWorkbook.createFont();
+            titleFont.setFontHeightInPoints((short) 14);
+            style.setFont(titleFont);
+            cell.setCellStyle(style);
+        }else {
+            cell.setCellStyle(this.titleStyle.execute(hssfWorkbook));
+        }
+        //设置默认值表头样式 设置表头居中
+        HSSFCellStyle headerStyle;
+        if (this.headerStyle == null){
+            HSSFCellStyle hssfCellStyle = hssfWorkbook.createCellStyle();
+            hssfCellStyle.setAlignment(HorizontalAlignment.CENTER);   //设置水平居中样式
+            hssfCellStyle.setVerticalAlignment(VerticalAlignment.CENTER);   //设置上下居中样式
+            hssfCellStyle.setBorderBottom(BorderStyle.THIN);
+            hssfCellStyle.setBorderLeft(BorderStyle.THIN);
+            hssfCellStyle.setBorderRight(BorderStyle.THIN);
+            hssfCellStyle.setBorderTop(BorderStyle.THIN);
+            // 如果设置背景色 BackgroundColor 无效，必须调用 ForegroundColor,且必须在调用 setFillPattern 才能生效
+            // hssfCellStyle.setFillForegroundColor(IndexedColors.RED.getIndex());// 无效
+            // hssfCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle = hssfCellStyle;
+        }else {
+            headerStyle = this.headerStyle.execute(hssfWorkbook);
+        }
         //设置表内容样式
         //创建单元格，并设置值表头 设置表头居中
         /*HSSFCellStyle style1 = hssfWorkbook.createCellStyle();
@@ -306,17 +332,12 @@ public class ExcelUtil<T> {
         style1.setBorderTop(BorderStyle.THIN);
         style1.setAlignment(HorizontalAlignment.CENTER);   //设置居中样式*/
 
-        //产生标题行
-        HSSFRow hssfRow = hssfSheet.createRow(0);
-        HSSFCell cell = hssfRow.createCell(0);
-        cell.setCellValue(title);
-        cell.setCellStyle(style);
         //产生表头
         HSSFRow row1 = hssfSheet.createRow(1);
         for (int i = 0, length = headers.size(); i < length; i++){
             HSSFCell hssfCell = row1.createCell(i);
             hssfCell.setCellValue(headers.get(i));
-            hssfCell.setCellStyle(hssfCellStyle);
+            hssfCell.setCellStyle(headerStyle);
         }
         //创建内容
         for (int i = 0,length = data.size(); i < length; i++){
@@ -382,6 +403,22 @@ public class ExcelUtil<T> {
     }
 
     /**
+     * 设置标题样式(可选)
+     * param titleStyle
+     */
+    public void setTitleStyle(Style style){
+        this.titleStyle = style;
+    }
+
+    /**
+     * 设置表头样式(可选)
+     * param headerStyle
+     */
+    public void setHeaderStyle(Style style){
+        this.headerStyle = style;
+    }
+
+    /**
      * 创建并设置单元格
      * param excel
      * param style
@@ -390,19 +427,21 @@ public class ExcelUtil<T> {
         // 创建锁定的单元格
         //HSSFCellStyle style2 = hssfWorkbook.createCellStyle();
         style.setLocked(excel.lock());
+        style.setAlignment(excel.align());//设置水平居中样式
+        style.setVerticalAlignment(excel.item());// 设置垂直居中
         style.setBorderBottom(BorderStyle.THIN);
         style.setBorderLeft(BorderStyle.THIN);
         style.setBorderRight(BorderStyle.THIN);
         style.setBorderTop(BorderStyle.THIN);
-        style.setAlignment(HorizontalAlignment.CENTER);//设置居中样式
         style.setWrapText(excel.wrap());// 是否自动换行
         font.setFontHeightInPoints(excel.fontSize());
         //font.setColor(HSSFColor.HSSFColorPredefined.BLACK.getIndex()); //字体颜色
-        font.setColor(excel.color()); //字体颜色
+        font.setColor(excel.color().getIndex()); //字体颜色
         style.setFont(font);
         //设置单元格颜色（颜色对应枚举会放在下面）
         //style.setFillForegroundColor(HSSFColor.HSSFColorPredefined.WHITE.getIndex());
-        style.setFillForegroundColor(excel.backgroundColor());
+        //style.setFillForegroundColor(IndexedColors.AQUA.getIndex());
+        style.setFillForegroundColor(excel.backgroundColor().getIndex());
         //全部填充 （填充枚举对应的样式也会放在下面）
         //style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);

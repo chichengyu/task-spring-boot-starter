@@ -1,5 +1,9 @@
 package com.job.excel.annotation;
 
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -26,7 +30,7 @@ public @interface Excel {
     double width() default 8;
 
     /**
-     * 导出时在excel中每个行的高 单位为px
+     * 导出时在excel中每个行的高 单位为px,设置height时,自适应autoHeight必须设置为false
      */
     float height() default 20;
 
@@ -36,9 +40,14 @@ public @interface Excel {
     boolean autoHeight() default true;
 
     /**
-     * 字体颜色,默认正常黑色：HSSFColor.HSSFColorPredefined.BLACK.getIndex()=8
+     * 左右是否居中,默认居中：HorizontalAlignment.CENTER
      */
-    short color() default 8;
+    HorizontalAlignment align() default HorizontalAlignment.CENTER;
+
+    /**
+     * 上下是否居中,默认居中：VerticalAlignment.CENTER
+     */
+    VerticalAlignment item() default VerticalAlignment.CENTER;
 
     /**
      * 字体大小,默认 10
@@ -46,9 +55,14 @@ public @interface Excel {
     short fontSize() default 10;
 
     /**
-     * 背景颜色,默认正常白色：HSSFColor.HSSFColorPredefined.WHITE.getIndex()=9
+     * 背景颜色,默认正常白色：HSSFColor.HSSFColorPredefined.WHITE.getIndex()=9,或者 IndexedColors.WHITE.getIndex()=9
      */
-    short backgroundColor() default 9;
+    IndexedColors backgroundColor() default IndexedColors.WHITE;
+
+    /**
+     * 字体颜色,默认正常黑色：HSSFColor.HSSFColorPredefined.BLACK.getIndex()=8,或者 IndexedColors.WHITE.BLACK()=8
+     */
+    IndexedColors color() default IndexedColors.BLACK;
 
     /**
      * 是否自动换行,默认 false
