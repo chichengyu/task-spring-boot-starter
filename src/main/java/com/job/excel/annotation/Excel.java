@@ -55,6 +55,16 @@ public @interface Excel {
     short fontSize() default 10;
 
     /**
+     * 是否加粗,默认false
+     */
+    boolean bold() default false;
+
+    /**
+     * 字体名称,如：Arial、微软雅黑...
+     */
+    String fontName() default "";
+
+    /**
      * 背景颜色,默认正常白色：HSSFColor.HSSFColorPredefined.WHITE.getIndex()=9,或者 IndexedColors.WHITE.getIndex()=9
      */
     IndexedColors backgroundColor() default IndexedColors.WHITE;

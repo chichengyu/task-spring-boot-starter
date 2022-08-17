@@ -7,7 +7,7 @@ Excel的工具类，方便导入与导出
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.3.10.RELEASE</version>
+    <version>1.3.11.RELEASE</version>
     <!-- 排除多余 quartz  -->
     <exclusions>
         <exclusion>
@@ -17,12 +17,12 @@ Excel的工具类，方便导入与导出
     </exclusions>
 </dependency>
 ```
-如果只是使用` 1.3.10.RELEASE ` 版本的 ` task定时任务`，可以参考下面导包坐标(排除多余依赖)，也可以直接使用之前版本[1.3.3.RELEASE](https://github.com/chichengyu/task-spring-boot-starter)，虽然不排除也没什么影响，但可以使项目体量小一些，导包
+如果只是使用` 1.3.11.RELEASE ` 版本的 ` task定时任务`，可以参考下面导包坐标(排除多余依赖)，也可以直接使用之前版本[1.3.3.RELEASE](https://github.com/chichengyu/task-spring-boot-starter)，虽然不排除也没什么影响，但可以使项目体量小一些，导包
 ```
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.3.10.RELEASE</version>
+    <version>1.3.11.RELEASE</version>
     <!-- 排除多余 excel -->
     <exclusions>
         <exclusion>
@@ -33,8 +33,8 @@ Excel的工具类，方便导入与导出
 </dependency>
 ```
 使用方式，参考下面，两种使用方式：
- + [使用` Excel `注解](#Excel注解)
- + [不使用注解(扩展性强,适用于随意组合的集合数据)](#不使用注解)
+ + 方式1:[使用` Excel `注解](#Excel注解),(也适用于随意组合数据,只是需要创建对应的vo类,然后加注解)
+ + 方式2:[不使用注解(扩展性强,适用于随意组合的集合数据)](#不使用注解),无需创建对应的vo类
 
 ### [Excel注解](#使用说明)
 首先在实体上加上 ` Excel ` 注解(还有很多属性,可自行查看注解里说明)，如：实体 ` TestPojo `
@@ -56,7 +56,7 @@ public class TestPojo implements Serializable {
     @Excel(name = "创建日期",width = 20,dateformat = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 
-    @Excel(name = "年龄",converExp = "0=男,1=女,2=未知",fontSize = 20)
+    @Excel(name = "年龄",converExp = "0=男,1=女,2=未知",fontSize = 20,bold = true,fontName = "微软雅黑")
     private Integer age;
 
     @Excel(name = "测试数字默认值",lock = true)

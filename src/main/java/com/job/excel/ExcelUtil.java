@@ -437,6 +437,10 @@ public class ExcelUtil<T> {
         font.setFontHeightInPoints(excel.fontSize());
         //font.setColor(HSSFColor.HSSFColorPredefined.BLACK.getIndex()); //字体颜色
         font.setColor(excel.color().getIndex()); //字体颜色
+        font.setBold(excel.bold());
+        if (!"".equals(excel.fontName())){
+            font.setFontName(excel.fontName());
+        }
         style.setFont(font);
         //设置单元格颜色（颜色对应枚举会放在下面）
         //style.setFillForegroundColor(HSSFColor.HSSFColorPredefined.WHITE.getIndex());
