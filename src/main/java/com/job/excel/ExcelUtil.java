@@ -43,12 +43,18 @@ public class ExcelUtil<T> {
     private static final int START_ROW_NUM=1;// 默认第1行，表头不算
     private Style titleStyle;// 标题样式
     private Style headerStyle;// 表头样式
+    private GridStyle gridStyle;// 表格样式
     private Class<T> clazz;
     private Field[] fields;
 
     @FunctionalInterface
     public interface Style{
         HSSFCellStyle execute(HSSFWorkbook hssfWorkbook);
+    }
+
+    @FunctionalInterface
+    public interface GridStyle{
+        HSSFCellStyle execute(HSSFWorkbook hssfWorkbook, Field field);
     }
 
     public ExcelUtil(Class<T> clazz){
@@ -240,7 +246,7 @@ public class ExcelUtil<T> {
         OutputStream out = null;
         HSSFWorkbook wb = null;
         try{
-            wb = createHSSFWorkbook(fileName, getHeaders(), data);
+            wb = createHSSFWorkbook(fileName, data);
             fileName = (fileName.contains(".xls")||fileName.contains(".xlsx")) ? fileName : (fileName + ".xlsx");
             out = setResponseHeader(fileName,response).getOutputStream();
             wb.write(out);
@@ -261,31 +267,35 @@ public class ExcelUtil<T> {
         }
     }
 
-    /**
-     * 获取 excel 表头名称
+    /** createHSSFWorkbook
+     * param title 标题
+     * param headers  表头
+     * param data  数据
      */
-    private List<String> getHeaders(){
+    private HSSFWorkbook createHSSFWorkbook(String title, List<T> data) throws Exception {
+        //创建一个HSSFWorkbook，对应一个Excel文件
+        HSSFWorkbook hssfWorkbook = new HSSFWorkbook();
+        //在workbook中添加一个sheet,对应Excel文件中的sheet
+        HSSFSheet hssfSheet = hssfWorkbook.createSheet(title);
+        Map<String,HSSFCellStyle> gridStyle = new HashMap<>();// 表格样式
         List<String> headers = new ArrayList<>();
         for (Field field : this.fields){
             if (field.isAnnotationPresent(Excel.class)){
                 field.setAccessible(true);
                 Excel excel = field.getAnnotation(Excel.class);
                 headers.add(excel.name());
+                if (excel.style() && this.gridStyle != null){
+                    HSSFCellStyle cellStyle = this.gridStyle.execute(hssfWorkbook, field);
+                    cellStyle.setLocked(excel.lock());
+                    gridStyle.put(field.getName(),cellStyle);
+                }else {
+                    gridStyle.put(field.getName(),setCellStyle(excel,hssfWorkbook.createCellStyle(),hssfWorkbook.createFont()));
+                    if (excel.lock()) {
+                        hssfSheet.protectSheet(excel.lockPassword());
+                    }
+                }
             }
         }
-        return headers;
-    }
-
-    /** createHSSFWorkbook
-     * param title 标题
-     * param headers  表头
-     * param data  数据
-     */
-    private HSSFWorkbook createHSSFWorkbook(String title, List<String> headers, List<T> data) throws Exception {
-        //创建一个HSSFWorkbook，对应一个Excel文件
-        HSSFWorkbook hssfWorkbook = new HSSFWorkbook();
-        //在workbook中添加一个sheet,对应Excel文件中的sheet
-        HSSFSheet hssfSheet = hssfWorkbook.createSheet(title);
         //创建标题合并行
         hssfSheet.addMergedRegion(new CellRangeAddress(0,(short)0,0,(short)headers.size() - 1));
         //产生标题行
@@ -354,11 +364,7 @@ public class ExcelUtil<T> {
                     hssfSheet.setColumnWidth(k,(int)((excel.width() + 0.72) * 256));
                     //将内容按顺序赋给对应列对象
                     HSSFCell hssfCell = row1.createCell(k++);
-                    // 单元格是否锁定,不可修改
-                    if (excel.lock()) {
-                        hssfSheet.protectSheet(excel.lockPassword());
-                    }
-                    hssfCell.setCellStyle(setCellStyle(excel,hssfWorkbook.createCellStyle(),hssfWorkbook.createFont()));
+                    hssfCell.setCellStyle(gridStyle.get(field.getName()));
                     field.setAccessible(true);
                     String defaultValue = excel.defaultValue();
                     Object val = field.get(t);
@@ -416,6 +422,14 @@ public class ExcelUtil<T> {
      */
     public void setHeaderStyle(Style style){
         this.headerStyle = style;
+    }
+
+    /**
+     * 设置表格样式(可选)
+     * param headerStyle
+     */
+    public void setGridStyle(GridStyle gridStyle){
+        this.gridStyle = gridStyle;
     }
 
     /**

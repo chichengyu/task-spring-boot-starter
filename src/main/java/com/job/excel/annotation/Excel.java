@@ -105,7 +105,7 @@ public @interface Excel {
     String defaultValue() default "";
 
     /**
-     * 读取内容转表达式 (如: 0=男,1=女,2=未知)
+     * 内容转表达式 (如: 0=男,1=女,2=未知)
      */
     String converExp() default "";
 
@@ -113,4 +113,9 @@ public @interface Excel {
      * 导入时，等于默认值 defaultValue 时，则设置为null，默认 false
      */
     boolean readDefaultValue() default false;
+
+    /**
+     * 样式是否自定义
+     */
+    boolean style() default false;
 }

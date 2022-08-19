@@ -7,7 +7,7 @@ Excel的工具类，方便导入与导出
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.3.11.RELEASE</version>
+    <version>1.3.12.RELEASE</version>
     <!-- 排除多余 quartz  -->
     <exclusions>
         <exclusion>
@@ -17,12 +17,12 @@ Excel的工具类，方便导入与导出
     </exclusions>
 </dependency>
 ```
-如果只是使用` 1.3.11.RELEASE ` 版本的 ` task定时任务`，可以参考下面导包坐标(排除多余依赖)，也可以直接使用之前版本[1.3.3.RELEASE](https://github.com/chichengyu/task-spring-boot-starter)，虽然不排除也没什么影响，但可以使项目体量小一些，导包
+如果只是使用` 1.3.12.RELEASE ` 版本的 ` task定时任务`，可以参考下面导包坐标(排除多余依赖)，也可以直接使用之前版本[1.3.3.RELEASE](https://github.com/chichengyu/task-spring-boot-starter)，虽然不排除也没什么影响，但可以使项目体量小一些，导包
 ```
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.3.11.RELEASE</version>
+    <version>1.3.12.RELEASE</version>
     <!-- 排除多余 excel -->
     <exclusions>
         <exclusion>
@@ -47,19 +47,19 @@ Excel的工具类，方便导入与导出
 public class TestPojo implements Serializable {
     private static final long serialVersionUID = -169520293430625480L;
 
-    @Excel(name = "ID",height = 32,lock = true,autoHeight = false)
+    @Excel(name = "ID",height = 32,autoHeight = false,style = true,lock = true)
     private Integer id;
 
     @Excel(name = "名称",width = 32,suffix = "(单位%)",wrap = true,backgroundColor = IndexedColors.DARK_GREEN,color = IndexedColors.BRIGHT_GREEN)
     private String name;
 
-    @Excel(name = "创建日期",width = 20,dateformat = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "创建日期",width = 20,dateformat = "yyyy-MM-dd HH:mm:ss",lock = true,bold = true)
     private Date createTime;
 
-    @Excel(name = "年龄",converExp = "0=男,1=女,2=未知",fontSize = 20,bold = true,fontName = "微软雅黑")
+    @Excel(name = "年龄",converExp = "0=男,1=女,2=未知",fontSize = 16,fontName = "微软雅黑",style = true,lock = true)
     private Integer age;
 
-    @Excel(name = "测试数字默认值",lock = true)
+    @Excel(name = "测试数字默认值")
     private Integer num;
 
     @Excel(name = "测试数字默认值1",converExp = "100=差,200=良好,300=优秀")
@@ -156,6 +156,34 @@ public class ExcelTestController extends BaseController{
             titleFont.setBold(true);
             style.setFont(titleFont);
             return style;
+        });
+        // 此时可以设置自定义表格列样式（不设置也可以）,使扩展性更强了,需要什么样式可自行定义
+        excelUtil.setGridStyle((hssfWorkbook,field) -> {
+            HSSFCellStyle cellStyle = hssfWorkbook.createCellStyle();
+            cellStyle.setAlignment(HorizontalAlignment.CENTER);   //设置水平居中样式
+            cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);   //设置上下居中样式
+            cellStyle.setBorderBottom(BorderStyle.THIN);
+            cellStyle.setBorderLeft(BorderStyle.THIN);
+            cellStyle.setBorderRight(BorderStyle.THIN);
+            cellStyle.setBorderTop(BorderStyle.THIN);
+            //设置字体
+            Font font = hssfWorkbook.createFont();
+            font.setFontHeightInPoints((short) 12);
+            font.setColor(IndexedColors.DARK_YELLOW.getIndex());
+            // 可以根据列的不同,设置不同的列样式,但需要在注解里开启自定义样式,如：@Excel(name = "ID",style = true)
+            // @Excel(name = "ID",style = true)
+            if ("id".equals(field.getName())){
+                font.setBold(true);
+            }
+            // @Excel(name = "年龄",style = true)
+            if ("age".equals(field.getName())){
+                font.setColor(IndexedColors.RED.getIndex());
+                // 如果设置背景色 BackgroundColor 无效，必须调用 ForegroundColor,且必须在调用 setFillPattern 才能生效
+                cellStyle.setFillForegroundColor(IndexedColors.BLUE1.getIndex());
+                cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            }
+            cellStyle.setFont(font);
+            return cellStyle;
         });
         excelUtil.export(response,"用户信息表",list);
     }
