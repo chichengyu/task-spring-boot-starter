@@ -7,7 +7,7 @@ Excel的工具类，方便导入与导出
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.3.12.RELEASE</version>
+    <version>1.3.13.RELEASE</version>
     <!-- 排除多余 quartz  -->
     <exclusions>
         <exclusion>
@@ -17,12 +17,12 @@ Excel的工具类，方便导入与导出
     </exclusions>
 </dependency>
 ```
-如果只是使用` 1.3.12.RELEASE ` 版本的 ` task定时任务`，可以参考下面导包坐标(排除多余依赖)，也可以直接使用之前版本[1.3.3.RELEASE](https://github.com/chichengyu/task-spring-boot-starter)，虽然不排除也没什么影响，但可以使项目体量小一些，导包
+如果只是使用` 1.3.13.RELEASE ` 版本的 ` task定时任务`，可以参考下面导包坐标(排除多余依赖)，也可以直接使用之前版本[1.3.3.RELEASE](https://github.com/chichengyu/task-spring-boot-starter)，虽然不排除也没什么影响，但可以使项目体量小一些，导包
 ```
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.3.12.RELEASE</version>
+    <version>1.3.13.RELEASE</version>
     <!-- 排除多余 excel -->
     <exclusions>
         <exclusion>

@@ -290,9 +290,9 @@ public class ExcelUtil<T> {
                     gridStyle.put(field.getName(),cellStyle);
                 }else {
                     gridStyle.put(field.getName(),setCellStyle(excel,hssfWorkbook.createCellStyle(),hssfWorkbook.createFont()));
-                    if (excel.lock()) {
-                        hssfSheet.protectSheet(excel.lockPassword());
-                    }
+                }
+                if (excel.lock()) {
+                    hssfSheet.protectSheet(excel.lockPassword());
                 }
             }
         }
