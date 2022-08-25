@@ -1,8 +1,11 @@
 package com.job.excel;
 
-import com.job.excel.annotation.Excel;
+import com.job.excel.annotation.ExcelColumn;
+import com.job.excel.annotation.ExcelHead;
+import com.job.excel.annotation.ExcelSheet;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -34,12 +37,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Excel工具类
  * @author xiaochi
  */
-public class ExcelUtil<T> {
+public class Excel<T> {
     private static final int START_ROW_NUM=1;// 默认第1行，表头不算
     private Style titleStyle;// 标题样式
     private Style headerStyle;// 表头样式
@@ -57,9 +61,13 @@ public class ExcelUtil<T> {
         HSSFCellStyle execute(HSSFWorkbook hssfWorkbook, Field field);
     }
 
-    public ExcelUtil(Class<T> clazz){
+    public Excel(Class<T> clazz){
         this.clazz = clazz;
         this.fields = clazz.getDeclaredFields();
+    }
+
+    public static <T>Excel<T> type(Class<T> clazz){
+        return new Excel<>(clazz);
     }
 
     /**
@@ -125,20 +133,20 @@ public class ExcelUtil<T> {
                         String attrVal = coloumVals.get(i);
                         for (Field field : this.fields){
                             String attrPojo = field.getName();
-                            if (field.isAnnotationPresent(Excel.class) && attrVal.equals(attrPojo)){
-                                Excel excel = field.getAnnotation(Excel.class);
+                            if (field.isAnnotationPresent(ExcelColumn.class) && attrVal.equals(attrPojo)){
+                                ExcelColumn excelColumn = field.getAnnotation(ExcelColumn.class);
                                 field.setAccessible(true);
                                 Class<?> fieldType = field.getType();
                                 Object val = getCellValue(sheetRow.getCell(i));
                                 if (val == null || "".equals(val)){
                                     continue;
                                 }
-                                String suffix = excel.suffix();
+                                String suffix = excelColumn.suffix();
                                 if (!"".equals(suffix) && val.toString().contains(suffix)){
                                     val = val.toString().replace(suffix,"");
                                 }
-                                if (excel.readDefaultValue()){
-                                    String defaultValue = excel.defaultValue();
+                                if (excelColumn.readDefaultValue()){
+                                    String defaultValue = excelColumn.defaultValue();
                                     if (!"".equals(defaultValue) && val.toString().contains(defaultValue)){
                                         val = val.toString().replace(defaultValue,"");
                                         if ("".equals(val)){
@@ -147,7 +155,7 @@ public class ExcelUtil<T> {
                                         }
                                     }
                                 }
-                                String converExp = excel.converExp();
+                                String converExp = excelColumn.converExp();
                                 if (!"".equals(converExp)){
                                     val = reverseByExp(String.valueOf(val),converExp);
                                 }
@@ -166,14 +174,14 @@ public class ExcelUtil<T> {
                                         field.set(t,BigDecimal.valueOf(Double.parseDouble(val.toString())));
                                     }else if (Date.class == fieldType){
                                         if (val instanceof String) {
-                                            val = new SimpleDateFormat(excel.dateformat()).parse(((String) val).trim());
+                                            val = new SimpleDateFormat(excelColumn.dateformat()).parse(((String) val).trim());
                                         } else if (val instanceof Double) {
                                             val = DateUtil.getJavaDate((Double) val);
                                         }
                                         field.set(t,val);
                                     }
                                 }catch (Exception e){
-                                    throw new RuntimeException("第"+(rowNum+1)+"行"+excel.name()+"列非法字符或值错误");
+                                    throw new RuntimeException("第"+(rowNum+1)+"行"+ excelColumn.name()+"列非法字符或值错误");
                                 }
                             }
                         }
@@ -226,11 +234,11 @@ public class ExcelUtil<T> {
     private Map<String,String> getFieldsAndHeader(){
         Map<String,String> fieldHeader = new HashMap<>();
         for (Field field : this.fields){
-            if (field.isAnnotationPresent(Excel.class)){
+            if (field.isAnnotationPresent(ExcelColumn.class)){
                 field.setAccessible(true);
                 String attr = field.getName();// 实体属性
-                Excel excel = field.getAnnotation(Excel.class);
-                String attrName = excel.name();// 实体属性对应的表头名称
+                ExcelColumn excelColumn = field.getAnnotation(ExcelColumn.class);
+                String attrName = excelColumn.name();// 实体属性对应的表头名称
                 fieldHeader.put(attr,attrName);
             }
         }
@@ -276,34 +284,34 @@ public class ExcelUtil<T> {
         //创建一个HSSFWorkbook，对应一个Excel文件
         HSSFWorkbook hssfWorkbook = new HSSFWorkbook();
         //在workbook中添加一个sheet,对应Excel文件中的sheet
-        HSSFSheet hssfSheet = hssfWorkbook.createSheet(title);
+        HSSFSheet hssfSheet = this.setSheetStyle(hssfWorkbook,title);
         Map<String,HSSFCellStyle> gridStyle = new HashMap<>();// 表格样式
         List<String> headers = new ArrayList<>();
         for (Field field : this.fields){
-            if (field.isAnnotationPresent(Excel.class)){
+            if (field.isAnnotationPresent(ExcelColumn.class)){
                 field.setAccessible(true);
-                Excel excel = field.getAnnotation(Excel.class);
-                headers.add(excel.name());
-                if (excel.style() && this.gridStyle != null){
+                ExcelColumn excelColumn = field.getAnnotation(ExcelColumn.class);
+                headers.add(excelColumn.name());
+                if (excelColumn.style() && this.gridStyle != null){
                     HSSFCellStyle cellStyle = this.gridStyle.execute(hssfWorkbook, field);
-                    cellStyle.setLocked(excel.lock());
+                    cellStyle.setLocked(excelColumn.lock());
                     gridStyle.put(field.getName(),cellStyle);
                 }else {
-                    gridStyle.put(field.getName(),setCellStyle(excel,hssfWorkbook.createCellStyle(),hssfWorkbook.createFont()));
+                    gridStyle.put(field.getName(),setCellStyle(excelColumn,hssfWorkbook.createCellStyle(),hssfWorkbook.createFont()));
                 }
-                if (excel.lock()) {
-                    hssfSheet.protectSheet(excel.lockPassword());
+                if (excelColumn.lock()) {
+                    hssfSheet.protectSheet(excelColumn.lockPassword());
                 }
             }
         }
         //创建标题合并行
         hssfSheet.addMergedRegion(new CellRangeAddress(0,(short)0,0,(short)headers.size() - 1));
         //产生标题行
-        HSSFRow hssfRow = hssfSheet.createRow(0);
+        /*HSSFRow hssfRow = hssfSheet.createRow(0);
         HSSFCell cell = hssfRow.createCell(0);
-        cell.setCellValue(title);
+        cell.setCellValue(title);*/
         //设置默认标题样式
-        if (this.titleStyle == null){
+        /*if (this.titleStyle == null){
             HSSFCellStyle style = hssfWorkbook.createCellStyle();
             style.setAlignment(HorizontalAlignment.CENTER);   //设置居中样式
             style.setVerticalAlignment(VerticalAlignment.CENTER);
@@ -312,36 +320,12 @@ public class ExcelUtil<T> {
             titleFont.setFontHeightInPoints((short) 14);
             style.setFont(titleFont);
             cell.setCellStyle(style);
-        }else {
+        }else{
             cell.setCellStyle(this.titleStyle.execute(hssfWorkbook));
-        }
-        //设置默认值表头样式 设置表头居中
-        HSSFCellStyle headerStyle;
-        if (this.headerStyle == null){
-            HSSFCellStyle hssfCellStyle = hssfWorkbook.createCellStyle();
-            hssfCellStyle.setAlignment(HorizontalAlignment.CENTER);   //设置水平居中样式
-            hssfCellStyle.setVerticalAlignment(VerticalAlignment.CENTER);   //设置上下居中样式
-            hssfCellStyle.setBorderBottom(BorderStyle.THIN);
-            hssfCellStyle.setBorderLeft(BorderStyle.THIN);
-            hssfCellStyle.setBorderRight(BorderStyle.THIN);
-            hssfCellStyle.setBorderTop(BorderStyle.THIN);
-            // 如果设置背景色 BackgroundColor 无效，必须调用 ForegroundColor,且必须在调用 setFillPattern 才能生效
-            // hssfCellStyle.setFillForegroundColor(IndexedColors.RED.getIndex());// 无效
-            // hssfCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            headerStyle = hssfCellStyle;
-        }else {
-            headerStyle = this.headerStyle.execute(hssfWorkbook);
-        }
-        //设置表内容样式
-        //创建单元格，并设置值表头 设置表头居中
-        /*HSSFCellStyle style1 = hssfWorkbook.createCellStyle();
-        style1.setLocked(false);
-        style1.setBorderBottom(BorderStyle.THIN);
-        style1.setBorderLeft(BorderStyle.THIN);
-        style1.setBorderRight(BorderStyle.THIN);
-        style1.setBorderTop(BorderStyle.THIN);
-        style1.setAlignment(HorizontalAlignment.CENTER);   //设置居中样式*/
+        }*/
 
+        //设置表头样式
+        HSSFCellStyle headerStyle = this.setHeadStyle(hssfWorkbook,hssfSheet);
         //产生表头
         HSSFRow row1 = hssfSheet.createRow(1);
         for (int i = 0, length = headers.size(); i < length; i++){
@@ -355,25 +339,25 @@ public class ExcelUtil<T> {
             T t = data.get(i);
             int k = 0;
             for (Field field : this.fields){
-                if (field.isAnnotationPresent(Excel.class)){
-                    Excel excel = field.getAnnotation(Excel.class);
-                    if (!excel.autoHeight()){
-                        row1.setHeightInPoints(excel.height());
+                if (field.isAnnotationPresent(ExcelColumn.class)){
+                    ExcelColumn excelColumn = field.getAnnotation(ExcelColumn.class);
+                    if (!excelColumn.autoHeight()){
+                        row1.setHeightInPoints(excelColumn.height());
                     }
                     // 设置列宽
-                    hssfSheet.setColumnWidth(k,(int)((excel.width() + 0.72) * 256));
+                    hssfSheet.setColumnWidth(k,(int)((excelColumn.width() + 0.72) * 256));
                     //将内容按顺序赋给对应列对象
                     HSSFCell hssfCell = row1.createCell(k++);
                     hssfCell.setCellStyle(gridStyle.get(field.getName()));
                     field.setAccessible(true);
-                    String defaultValue = excel.defaultValue();
+                    String defaultValue = excelColumn.defaultValue();
                     Object val = field.get(t);
                     if ((val == null || "".equals(val)) && !"".equals(defaultValue)){
                         val = defaultValue;
                     }
                     if (val != null){
-                        String suffix = excel.suffix();
-                        String converExp = excel.converExp();
+                        String suffix = excelColumn.suffix();
+                        String converExp = excelColumn.converExp();
                         Class<?> fieldType = field.getType();
                         if (!"".equals(suffix)){
                             val += suffix;
@@ -395,10 +379,10 @@ public class ExcelUtil<T> {
                         }else if (BigDecimal.class == fieldType){
                             hssfCell.setCellValue(Double.parseDouble(val.toString()));
                         }else if (Date.class == fieldType){
-                            if ("".equals(excel.dateformat())){
+                            if ("".equals(excelColumn.dateformat())){
                                 hssfCell.setCellValue(val.toString());
                             }else {
-                                hssfCell.setCellValue(new SimpleDateFormat(excel.dateformat()).format(val));
+                                hssfCell.setCellValue(new SimpleDateFormat(excelColumn.dateformat()).format(val));
                             }
                         }
                     }
@@ -433,33 +417,145 @@ public class ExcelUtil<T> {
     }
 
     /**
+     * 设置sheet样式(可选)
+     */
+    public HSSFSheet setSheetStyle(HSSFWorkbook hssfWorkbook,String title){
+        if (Objects.equals(this.titleStyle,null) && this.clazz.isAnnotationPresent(ExcelSheet.class)){
+            ExcelSheet excelSheet = this.clazz.getAnnotation(ExcelSheet.class);
+            String titleVal = "".equals(excelSheet.name()) ? title : excelSheet.name();
+            HSSFSheet hssfSheet = hssfWorkbook.createSheet(titleVal);
+            //产生标题行
+            HSSFRow hssfRow = hssfSheet.createRow(0);
+            HSSFCell cell = hssfRow.createCell(0);
+            cell.setCellValue(titleVal);
+            // 标题样式
+            HSSFCellStyle style = hssfWorkbook.createCellStyle();
+            style.setBorderBottom(BorderStyle.THIN);
+            style.setBorderLeft(BorderStyle.THIN);
+            style.setBorderRight(BorderStyle.THIN);
+            style.setBorderTop(BorderStyle.THIN);
+            style.setAlignment(excelSheet.align());   //设置居中样式
+            style.setVerticalAlignment(excelSheet.vertical());
+            style.setFillForegroundColor(excelSheet.backColor().getIndex());
+            style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            style.setWrapText(excelSheet.wrap());
+            style.setLocked(excelSheet.lock());
+            if (excelSheet.lock()) {
+                hssfSheet.protectSheet(excelSheet.lockPassword());
+            }
+            //设置标题字体
+            Font titleFont = hssfWorkbook.createFont();
+            titleFont.setFontHeightInPoints(excelSheet.fontSize());
+            titleFont.setColor(excelSheet.color().getIndex());
+            titleFont.setItalic(excelSheet.italic());
+            titleFont.setBold(excelSheet.bold());
+            if (!"".equals(excelSheet.fontName())){
+                titleFont.setFontName(excelSheet.fontName());
+            }
+            style.setFont(titleFont);
+            cell.setCellStyle(style);
+            return hssfSheet;
+        }else if (this.titleStyle != null){// 自定义样式
+            HSSFSheet hssfSheet = hssfWorkbook.createSheet(title);
+            //产生标题行
+            HSSFRow hssfRow = hssfSheet.createRow(0);
+            HSSFCell cell = hssfRow.createCell(0);
+            cell.setCellValue(title);
+            cell.setCellStyle(this.titleStyle.execute(hssfWorkbook));
+            return hssfSheet;
+        }else {// 默认样式
+            HSSFSheet hssfSheet = hssfWorkbook.createSheet(title);
+            //产生标题行
+            HSSFRow hssfRow = hssfSheet.createRow(0);
+            HSSFCell cell = hssfRow.createCell(0);
+            cell.setCellValue(title);
+            HSSFCellStyle style = hssfWorkbook.createCellStyle();
+            style.setAlignment(HorizontalAlignment.CENTER);   //设置居中样式
+            style.setVerticalAlignment(VerticalAlignment.CENTER);
+            style.setLocked(false);
+            //设置标题字体
+            Font titleFont = hssfWorkbook.createFont();
+            titleFont.setFontHeightInPoints((short) 14);
+            style.setFont(titleFont);
+            cell.setCellStyle(style);
+            return hssfSheet;
+        }
+    }
+
+    /**
+     * 设置表头注解样式(可选)
+     */
+    public HSSFCellStyle setHeadStyle(HSSFWorkbook hssfWorkbook,HSSFSheet hssfSheet){
+        if (Objects.equals(this.headerStyle,null) && this.clazz.isAnnotationPresent(ExcelHead.class)){// 注解样式
+            ExcelHead excelHead = this.clazz.getAnnotation(ExcelHead.class);
+            HSSFCellStyle hssfCellStyle = hssfWorkbook.createCellStyle();
+            hssfCellStyle.setBorderBottom(BorderStyle.THIN);
+            hssfCellStyle.setBorderLeft(BorderStyle.THIN);
+            hssfCellStyle.setBorderRight(BorderStyle.THIN);
+            hssfCellStyle.setBorderTop(BorderStyle.THIN);
+            hssfCellStyle.setAlignment(excelHead.align());
+            hssfCellStyle.setVerticalAlignment(excelHead.vertical());
+            hssfCellStyle.setWrapText(excelHead.wrap());
+            hssfCellStyle.setFillForegroundColor(excelHead.backColor().getIndex());
+            hssfCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            hssfCellStyle.setLocked(excelHead.lock());
+            if (excelHead.lock()) {
+                hssfSheet.protectSheet(excelHead.lockPassword());
+            }
+            HSSFFont font = hssfWorkbook.createFont();
+            font.setFontHeightInPoints(excelHead.fontSize());
+            font.setColor(excelHead.color().getIndex());
+            font.setItalic(excelHead.italic());
+            font.setBold(excelHead.bold());
+            if (!"".equals(excelHead.fontName())){
+                font.setFontName(excelHead.fontName());
+            }
+            hssfCellStyle.setFont(font);
+            return hssfCellStyle;
+        }else if (this.headerStyle != null){// 自定义样式
+            return this.headerStyle.execute(hssfWorkbook);
+        }else {// 默认样式
+            HSSFCellStyle hssfCellStyle = hssfWorkbook.createCellStyle();
+            hssfCellStyle.setAlignment(HorizontalAlignment.CENTER);   //设置水平居中样式
+            hssfCellStyle.setVerticalAlignment(VerticalAlignment.CENTER);   //设置上下居中样式
+            hssfCellStyle.setBorderBottom(BorderStyle.THIN);
+            hssfCellStyle.setBorderLeft(BorderStyle.THIN);
+            hssfCellStyle.setBorderRight(BorderStyle.THIN);
+            hssfCellStyle.setBorderTop(BorderStyle.THIN);
+            hssfCellStyle.setLocked(false);
+            return hssfCellStyle;
+        }
+    }
+
+    /**
      * 创建并设置单元格
      * param excel
      * param style
      */
-    private HSSFCellStyle setCellStyle(Excel excel,HSSFCellStyle style,Font font){
+    private HSSFCellStyle setCellStyle(ExcelColumn excelColumn, HSSFCellStyle style, Font font){
         // 创建锁定的单元格
         //HSSFCellStyle style2 = hssfWorkbook.createCellStyle();
-        style.setLocked(excel.lock());
-        style.setAlignment(excel.align());//设置水平居中样式
-        style.setVerticalAlignment(excel.item());// 设置垂直居中
+        style.setLocked(excelColumn.lock());
+        style.setAlignment(excelColumn.align());//设置水平居中样式
+        style.setVerticalAlignment(excelColumn.vertical());// 设置垂直居中
         style.setBorderBottom(BorderStyle.THIN);
         style.setBorderLeft(BorderStyle.THIN);
         style.setBorderRight(BorderStyle.THIN);
         style.setBorderTop(BorderStyle.THIN);
-        style.setWrapText(excel.wrap());// 是否自动换行
-        font.setFontHeightInPoints(excel.fontSize());
+        style.setWrapText(excelColumn.wrap());// 是否自动换行
+        font.setFontHeightInPoints(excelColumn.fontSize());
         //font.setColor(HSSFColor.HSSFColorPredefined.BLACK.getIndex()); //字体颜色
-        font.setColor(excel.color().getIndex()); //字体颜色
-        font.setBold(excel.bold());
-        if (!"".equals(excel.fontName())){
-            font.setFontName(excel.fontName());
+        font.setColor(excelColumn.color().getIndex()); //字体颜色
+        font.setItalic(excelColumn.italic());
+        font.setBold(excelColumn.bold());
+        if (!"".equals(excelColumn.fontName())){
+            font.setFontName(excelColumn.fontName());
         }
         style.setFont(font);
         //设置单元格颜色（颜色对应枚举会放在下面）
         //style.setFillForegroundColor(HSSFColor.HSSFColorPredefined.WHITE.getIndex());
         //style.setFillForegroundColor(IndexedColors.AQUA.getIndex());
-        style.setFillForegroundColor(excel.backgroundColor().getIndex());
+        style.setFillForegroundColor(excelColumn.backColor().getIndex());
         //全部填充 （填充枚举对应的样式也会放在下面）
         //style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);

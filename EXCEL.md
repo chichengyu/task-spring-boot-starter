@@ -1,5 +1,9 @@
 ## Excel 工具使用
-Excel的工具类，方便导入与导出
+Excel的工具类，方便导入与导出,提供三个注解
+
+ + ExcelSheet(用于设置标题样式与名称及sheet名称,不需要也可不设置)
+ + ExcelHead(用于设置表头列样式,不需要也可不设置)
+ + ExcelColumn(用于设置表格每列样式,此注解` name `(列名称)属性必须设置)
 
 ##### 使用说明
 如果单纯使用 ` Excel `工具, 导包
@@ -7,7 +11,7 @@ Excel的工具类，方便导入与导出
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.3.13.RELEASE</version>
+    <version>1.3.14.RELEASE</version>
     <!-- 排除多余 quartz  -->
     <exclusions>
         <exclusion>
@@ -17,12 +21,12 @@ Excel的工具类，方便导入与导出
     </exclusions>
 </dependency>
 ```
-如果只是使用` 1.3.13.RELEASE ` 版本的 ` task定时任务`，可以参考下面导包坐标(排除多余依赖)，也可以直接使用之前版本[1.3.3.RELEASE](https://github.com/chichengyu/task-spring-boot-starter)，虽然不排除也没什么影响，但可以使项目体量小一些，导包
+如果只是使用` 1.3.14.RELEASE ` 版本的 ` task定时任务`，可以参考下面导包坐标(排除多余依赖)，也可以直接使用之前版本[1.3.3.RELEASE](https://github.com/chichengyu/task-spring-boot-starter)，虽然不排除也没什么影响，但可以使项目体量小一些，导包
 ```
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.3.13.RELEASE</version>
+    <version>1.3.14.RELEASE</version>
     <!-- 排除多余 excel -->
     <exclusions>
         <exclusion>
@@ -39,6 +43,8 @@ Excel的工具类，方便导入与导出
 ### [Excel注解](#使用说明)
 首先在实体上加上 ` Excel ` 注解(还有很多属性,可自行查看注解里说明)，如：实体 ` TestPojo `
 ```
+//@ExcelSheet(fontSize = 22,color = IndexedColors.DARK_YELLOW,backColor = IndexedColors.SKY_BLUE,bold = true,fontName = "微软雅黑",lock = true)
+//@ExcelHead(backColor = IndexedColors.GREEN,color = IndexedColors.YELLOW,fontSize = 18,wrap = true,lock = true,bold = true)
 @Data
 @Builder
 @NoArgsConstructor
@@ -47,31 +53,31 @@ Excel的工具类，方便导入与导出
 public class TestPojo implements Serializable {
     private static final long serialVersionUID = -169520293430625480L;
 
-    @Excel(name = "ID",height = 32,autoHeight = false,style = true,lock = true)
+    @ExcelColumn(name = "ID",height = 32,autoHeight = false,style = true,lock = true)
     private Integer id;
 
-    @Excel(name = "名称",width = 32,suffix = "(单位%)",wrap = true,backgroundColor = IndexedColors.DARK_GREEN,color = IndexedColors.BRIGHT_GREEN)
+    @ExcelColumn(name = "名称",width = 32,suffix = "(单位%)",wrap = true,backColor = IndexedColors.DARK_GREEN,color = IndexedColors.BRIGHT_GREEN)
     private String name;
 
-    @Excel(name = "创建日期",width = 20,dateformat = "yyyy-MM-dd HH:mm:ss",lock = true,bold = true)
+    @ExcelColumn(name = "创建日期",width = 20,dateformat = "yyyy-MM-dd HH:mm:ss",lock = true,bold = true)
     private Date createTime;
 
-    @Excel(name = "年龄",converExp = "0=男,1=女,2=未知",fontSize = 16,fontName = "微软雅黑",style = true,lock = true)
+    @ExcelColumn(name = "年龄",converExp = "0=男,1=女,2=未知",fontSize = 16,fontName = "微软雅黑",style = true,lock = true)
     private Integer age;
 
-    @Excel(name = "测试数字默认值")
+    @ExcelColumn(name = "测试数字默认值")
     private Integer num;
 
-    @Excel(name = "测试数字默认值1",converExp = "100=差,200=良好,300=优秀")
+    @ExcelColumn(name = "测试数字默认值1",converExp = "100=差,200=良好,300=优秀")
     private Integer aa;
 
-    @Excel(name = "测试数字默认值2",converExp = "100=差,200=良好,300=优秀")
+    @ExcelColumn(name = "测试数字默认值2",converExp = "100=差,200=良好,300=优秀")
     private Long bb;
 
-    @Excel(name = "测试数字默认值3",converExp = "100.00=差,200.00=良好,300.00=优秀")
+    @ExcelColumn(name = "测试数字默认值3",converExp = "100.00=差,200.00=良好,300.00=优秀")
     private Float cc;
 
-    @Excel(name = "测试数字默认值4",readDefaultValue = true, converExp = "100.00=差,200.00=良好,300.00=优秀")
+    @ExcelColumn(name = "测试数字默认值4",readDefaultValue = true, converExp = "100.00=差,200.00=良好,300.00=优秀")
     private Double dd;
 }
 ```
@@ -91,10 +97,12 @@ public class ExcelTestController extends BaseController{
     public R<List<TestPojo>> excelImport(MultipartFile file){
         try{
             //excel文件名
-            ExcelUtil<TestPojo> excelUtil = new ExcelUtil<>(TestPojo.class);
-            //List<TestPojo> pojoList = excelUtil.read("d:/test.xls");
+            Excel<TestPojo> excel = new Excel<>(TestPojo.class);
+            //List<TestPojo> pojoList = excel.read("d:/test.xls");
             InputStream inputStream = file.getInputStream();
-            List<TestPojo> pojoList = excelUtil.read(inputStream);
+            List<TestPojo> pojoList = excel.read(inputStream);
+            // 或者使用静态方法
+            //Excel.type(TestPojo.class).read(file.getInputStream());
             return R.ok(pojoList);
         }catch (Exception e){
             return R.error(e.getMessage());
@@ -121,73 +129,79 @@ public class ExcelTestController extends BaseController{
             list.add(testPojo);*/
         }
         //excel文件名
-        ExcelUtil<TestPojo> excelUtil = new ExcelUtil<>(TestPojo.class);
-        //excelUtil.export(response,"用户信息表",list);
-        // 此时可以设置表头样式（不设置也可以）
-        excelUtil.setHeaderStyle(hssfWorkbook -> {
-            HSSFCellStyle headerStyle = hssfWorkbook.createCellStyle();
-            headerStyle.setAlignment(HorizontalAlignment.CENTER);   //设置水平居中样式
-            headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);   //设置上下居中样式
-            headerStyle.setBorderBottom(BorderStyle.THIN);
-            headerStyle.setBorderLeft(BorderStyle.THIN);
-            headerStyle.setBorderRight(BorderStyle.THIN);
-            headerStyle.setBorderTop(BorderStyle.THIN);
-            // 如果设置背景色 BackgroundColor 无效，必须调用 ForegroundColor,且必须在调用 setFillPattern 才能生效
-            headerStyle.setFillForegroundColor(IndexedColors.DARK_RED.getIndex());
-            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            return headerStyle;
-        });
-        // 此时可以设置标题样式（不设置也可以）
-        excelUtil.setTitleStyle(hssfWorkbook -> {
-            HSSFCellStyle style = hssfWorkbook.createCellStyle();
-            style.setAlignment(HorizontalAlignment.CENTER);   //设置水平居中样式
-            style.setVerticalAlignment(VerticalAlignment.CENTER);   //设置上下居中样式
-            style.setBorderBottom(BorderStyle.THIN);
-            style.setBorderLeft(BorderStyle.THIN);
-            style.setBorderRight(BorderStyle.THIN);
-            style.setBorderTop(BorderStyle.THIN);
-            // 如果设置背景色 BackgroundColor 无效，必须调用 ForegroundColor,且必须在调用 setFillPattern 才能生效
-            style.setFillForegroundColor(IndexedColors.RED.getIndex());
-            style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            //设置标题字体
-            Font titleFont = hssfWorkbook.createFont();
-            titleFont.setFontHeightInPoints((short) 14);
-            titleFont.setColor(IndexedColors.DARK_YELLOW.getIndex());
-            titleFont.setBold(true);
-            style.setFont(titleFont);
-            return style;
-        });
-        // 此时可以设置自定义表格列样式（不设置也可以）,使扩展性更强了,需要什么样式可自行定义
-        excelUtil.setGridStyle((hssfWorkbook,field) -> {
-            HSSFCellStyle cellStyle = hssfWorkbook.createCellStyle();
-            cellStyle.setAlignment(HorizontalAlignment.CENTER);   //设置水平居中样式
-            cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);   //设置上下居中样式
-            cellStyle.setBorderBottom(BorderStyle.THIN);
-            cellStyle.setBorderLeft(BorderStyle.THIN);
-            cellStyle.setBorderRight(BorderStyle.THIN);
-            cellStyle.setBorderTop(BorderStyle.THIN);
-            //设置字体
-            Font font = hssfWorkbook.createFont();
-            font.setFontHeightInPoints((short) 12);
-            font.setColor(IndexedColors.DARK_YELLOW.getIndex());
-            // 可以根据列的不同,设置不同的列样式,但需要在注解里开启自定义样式,如：@Excel(name = "ID",style = true)
-            // @Excel(name = "ID",style = true)
-            if ("id".equals(field.getName())){
-                font.setBold(true);
-            }
-            // @Excel(name = "年龄",style = true)
-            if ("age".equals(field.getName())){
-                font.setColor(IndexedColors.RED.getIndex());
-                // 如果设置背景色 BackgroundColor 无效，必须调用 ForegroundColor,且必须在调用 setFillPattern 才能生效
-                cellStyle.setFillForegroundColor(IndexedColors.BLUE1.getIndex());
-                cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            }
-            cellStyle.setFont(font);
-            return cellStyle;
-        });
-        excelUtil.export(response,"用户信息表",list);
+        Excel<TestPojo> excel = new Excel<>(TestPojo.class);
+        excel.export(response,"用户信息表",list);
+        // 也可以直接使用静态方法
+        Excel.type(TestPojo.class).export(response,"用户信息表",list);
     }
 }
+```
+##### 自定义样式(自定义样式与注解ExcelSheet/ExcelHead,可不设置,有默认样式,优先级:自定义 > 注解 > 默认)
+```
+Excel<TestPojo> excel = new Excel<>(TestPojo.class);
+// 此时可以设置表头样式（不设置也可以）
+excel.setHeaderStyle(hssfWorkbook -> {
+    HSSFCellStyle headerStyle = hssfWorkbook.createCellStyle();
+    headerStyle.setAlignment(HorizontalAlignment.CENTER);   //设置水平居中样式
+    headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);   //设置上下居中样式
+    headerStyle.setBorderBottom(BorderStyle.THIN);
+    headerStyle.setBorderLeft(BorderStyle.THIN);
+    headerStyle.setBorderRight(BorderStyle.THIN);
+    headerStyle.setBorderTop(BorderStyle.THIN);
+    // 如果设置背景色 BackgroundColor 无效，必须调用 ForegroundColor,且必须在调用 setFillPattern 才能生效
+    headerStyle.setFillForegroundColor(IndexedColors.DARK_RED.getIndex());
+    headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+    return headerStyle;
+});
+// 此时可以设置标题样式（不设置也可以）
+excel.setTitleStyle(hssfWorkbook -> {
+    HSSFCellStyle style = hssfWorkbook.createCellStyle();
+    style.setAlignment(HorizontalAlignment.CENTER);   //设置水平居中样式
+    style.setVerticalAlignment(VerticalAlignment.CENTER);   //设置上下居中样式
+    style.setBorderBottom(BorderStyle.THIN);
+    style.setBorderLeft(BorderStyle.THIN);
+    style.setBorderRight(BorderStyle.THIN);
+    style.setBorderTop(BorderStyle.THIN);
+    // 如果设置背景色 BackgroundColor 无效，必须调用 ForegroundColor,且必须在调用 setFillPattern 才能生效
+    style.setFillForegroundColor(IndexedColors.RED.getIndex());
+    style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+    //设置标题字体
+    Font titleFont = hssfWorkbook.createFont();
+    titleFont.setFontHeightInPoints((short) 14);
+    titleFont.setColor(IndexedColors.DARK_YELLOW.getIndex());
+    titleFont.setBold(true);
+    style.setFont(titleFont);
+    return style;
+});
+// 此时可以设置自定义表格列样式（不设置也可以）,使扩展性更强了,需要什么样式可自行定义
+excel.setGridStyle((hssfWorkbook,field) -> {
+    HSSFCellStyle cellStyle = hssfWorkbook.createCellStyle();
+    cellStyle.setAlignment(HorizontalAlignment.CENTER);   //设置水平居中样式
+    cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);   //设置上下居中样式
+    cellStyle.setBorderBottom(BorderStyle.THIN);
+    cellStyle.setBorderLeft(BorderStyle.THIN);
+    cellStyle.setBorderRight(BorderStyle.THIN);
+    cellStyle.setBorderTop(BorderStyle.THIN);
+    //设置字体
+    Font font = hssfWorkbook.createFont();
+    font.setFontHeightInPoints((short) 12);
+    font.setColor(IndexedColors.DARK_YELLOW.getIndex());
+    // 可以根据列的不同,设置不同的列样式,但需要在注解里开启自定义样式,如：@Excel(name = "ID",style = true)
+    // @Excel(name = "ID",style = true)
+    if ("id".equals(field.getName())){
+        font.setBold(true);
+    }
+    // @Excel(name = "年龄",style = true)
+    if ("age".equals(field.getName())){
+        font.setColor(IndexedColors.RED.getIndex());
+        // 如果设置背景色 BackgroundColor 无效，必须调用 ForegroundColor,且必须在调用 setFillPattern 才能生效
+        cellStyle.setFillForegroundColor(IndexedColors.BLUE1.getIndex());
+        cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+    }
+    cellStyle.setFont(font);
+    return cellStyle;
+});
+excel.export(response,"用户信息表",list);
 ```
 
 ### [不使用注解](#使用说明)
@@ -209,7 +223,7 @@ public class ExcelTestController extends BaseController{
             // 与 String[] headers = {"用户ID", "用户名称", "用户密码", "用户手机","创建时间"}; 一一对应
             String[] fields = {"id","name","password","time"};
             InputStream inputStream = file.getInputStream();
-            List<Map<String, Object>> mapList = ExcelUtil.read2(inputStream, Arrays.asList(fields));
+            List<Map<String, Object>> mapList = Excel.read2(inputStream, Arrays.asList(fields));
             return R.ok(mapList);
         }catch (Exception e){
             return R.error(e.getMessage());
@@ -253,7 +267,7 @@ public class ExcelTestController extends BaseController{
             content[i][2] = obj.getAge().toString();
             content[i][3] = dateFormat.format(obj.getCreateTime());
         }
-        ExcelUtil.export2(response,fileName,headers,content);
+        Excel.export2(response,fileName,headers,content);
     }
 }
 ```

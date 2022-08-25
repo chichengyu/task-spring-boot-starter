@@ -6,7 +6,7 @@
 
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>1.3.13.RELEASE</version>
+    <version>1.3.14.RELEASE</version>
     <packaging>jar</packaging>
     <name>task-spring-boot-starter</name>
     <url>https://github.com/chichengyu/task-spring-boot-starter</url>
@@ -135,7 +135,7 @@
                     <charset>UTF-8</charset>
                     <encoding>UTF-8</encoding>
                     <docencoding>UTF-8</docencoding>
-                    <!--<additionalparam>-Xdoclint:none</additionalparam>-->
+                    <additionalparam>-Xdoclint:none</additionalparam>
                     <!-- TODO 临时解决不规范的javadoc生成报错,后面要规范化后把这行去掉 -->
                 </configuration>
                 <executions>

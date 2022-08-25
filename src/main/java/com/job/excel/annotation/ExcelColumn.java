@@ -12,13 +12,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * excel 注解
+ * excel 列注解
+ * 样式优先级: 自定义 > 注解 > 默认
+ * 自定义样式时,一定要设置属性 style = true
  */
 @Inherited
 @Documented
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Excel {
+public @interface ExcelColumn {
     /**
      * 名称
      */
@@ -47,7 +49,7 @@ public @interface Excel {
     /**
      * 上下是否居中,默认居中：VerticalAlignment.CENTER
      */
-    VerticalAlignment item() default VerticalAlignment.CENTER;
+    VerticalAlignment vertical() default VerticalAlignment.CENTER;
 
     /**
      * 字体大小,默认 10
@@ -67,12 +69,17 @@ public @interface Excel {
     /**
      * 背景颜色,默认正常白色：HSSFColor.HSSFColorPredefined.WHITE.getIndex()=9,或者 IndexedColors.WHITE.getIndex()=9
      */
-    IndexedColors backgroundColor() default IndexedColors.WHITE;
+    IndexedColors backColor() default IndexedColors.WHITE;
 
     /**
      * 字体颜色,默认正常黑色：HSSFColor.HSSFColorPredefined.BLACK.getIndex()=8,或者 IndexedColors.WHITE.BLACK()=8
      */
     IndexedColors color() default IndexedColors.BLACK;
+
+    /**
+     * 是否使用斜体
+     */
+    boolean italic() default false;
 
     /**
      * 是否自动换行,默认 false
