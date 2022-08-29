@@ -21,7 +21,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ExcelSheet {
     /**
-     * 名称,为空时默认使用文件名称
+     * 标题名称与sheet名称,为空时默认使用文件名称
      */
     String name() default "";
 
@@ -36,9 +36,9 @@ public @interface ExcelSheet {
     VerticalAlignment vertical() default VerticalAlignment.CENTER;
 
     /**
-     * 字体大小,默认 10
+     * 字体大小,默认 14
      */
-    short fontSize() default 10;
+    short fontSize() default 14;
 
     /**
      * 是否加粗,默认false
