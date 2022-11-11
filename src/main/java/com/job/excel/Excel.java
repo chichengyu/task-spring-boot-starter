@@ -5,12 +5,12 @@ import com.job.excel.annotation.ExcelHead;
 import com.job.excel.annotation.ExcelSheet;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
-import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -22,6 +22,7 @@ import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.FileInputStream;
@@ -53,12 +54,12 @@ public class Excel<T> {
 
     @FunctionalInterface
     public interface Style{
-        HSSFCellStyle execute(HSSFWorkbook hssfWorkbook);
+        CellStyle execute(Workbook workbook);
     }
 
     @FunctionalInterface
     public interface GridStyle{
-        HSSFCellStyle execute(HSSFWorkbook hssfWorkbook, Field field);
+        CellStyle execute(Workbook workbook, Field field);
     }
 
     public Excel(Class<T> clazz){
@@ -252,9 +253,9 @@ public class Excel<T> {
      */
     public String export(HttpServletResponse response, String fileName, List<T> data) throws Exception {
         OutputStream out = null;
-        HSSFWorkbook wb = null;
+        Workbook wb = null;
         try{
-            wb = createHSSFWorkbook(fileName, data);
+            wb = createWorkbook(fileName, data);
             fileName = (fileName.contains(".xls")||fileName.contains(".xlsx")) ? fileName : (fileName + ".xlsx");
             out = setResponseHeader(fileName,response).getOutputStream();
             wb.write(out);
@@ -280,12 +281,13 @@ public class Excel<T> {
      * param headers  表头
      * param data  数据
      */
-    private HSSFWorkbook createHSSFWorkbook(String title, List<T> data) throws Exception {
+    private Workbook createWorkbook(String title, List<T> data) throws Exception {
         //创建一个HSSFWorkbook，对应一个Excel文件
-        HSSFWorkbook hssfWorkbook = new HSSFWorkbook();
+        //HSSFWorkbook hssfWorkbook = new HSSFWorkbook();2003版本
+        Workbook workbook = new SXSSFWorkbook(500);
         //在workbook中添加一个sheet,对应Excel文件中的sheet
-        HSSFSheet hssfSheet = this.setSheetStyle(hssfWorkbook,title);
-        Map<String,HSSFCellStyle> gridStyle = new HashMap<>();// 表格样式
+        Sheet sheet = this.setSheetStyle(workbook,title);
+        Map<String,CellStyle> gridStyle = new HashMap<>();// 表格样式
         List<String> headers = new ArrayList<>();
         for (Field field : this.fields){
             if (field.isAnnotationPresent(ExcelColumn.class)){
@@ -293,19 +295,19 @@ public class Excel<T> {
                 ExcelColumn excelColumn = field.getAnnotation(ExcelColumn.class);
                 headers.add(excelColumn.name());
                 if (excelColumn.style() && this.gridStyle != null){
-                    HSSFCellStyle cellStyle = this.gridStyle.execute(hssfWorkbook, field);
+                    CellStyle cellStyle = this.gridStyle.execute(workbook, field);
                     cellStyle.setLocked(excelColumn.lock());
                     gridStyle.put(field.getName(),cellStyle);
                 }else {
-                    gridStyle.put(field.getName(),setCellStyle(excelColumn,hssfWorkbook.createCellStyle(),hssfWorkbook.createFont()));
+                    gridStyle.put(field.getName(),setCellStyle(excelColumn,workbook.createCellStyle(),workbook.createFont()));
                 }
                 if (excelColumn.lock()) {
-                    hssfSheet.protectSheet(excelColumn.lockPassword());
+                    sheet.protectSheet(excelColumn.lockPassword());
                 }
             }
         }
         //创建标题合并行
-        hssfSheet.addMergedRegion(new CellRangeAddress(0,(short)0,0,(short)headers.size() - 1));
+        sheet.addMergedRegion(new CellRangeAddress(0,(short)0,0,(short)headers.size() - 1));
         //产生标题行
         /*HSSFRow hssfRow = hssfSheet.createRow(0);
         HSSFCell cell = hssfRow.createCell(0);
@@ -325,17 +327,17 @@ public class Excel<T> {
         }*/
 
         //设置表头样式
-        HSSFCellStyle headerStyle = this.setHeadStyle(hssfWorkbook,hssfSheet);
+        CellStyle headerStyle = this.setHeadStyle(workbook,sheet);
         //产生表头
-        HSSFRow row1 = hssfSheet.createRow(1);
+        Row row1 = sheet.createRow(1);
         for (int i = 0, length = headers.size(); i < length; i++){
-            HSSFCell hssfCell = row1.createCell(i);
-            hssfCell.setCellValue(headers.get(i));
-            hssfCell.setCellStyle(headerStyle);
+            Cell cell = row1.createCell(i);
+            cell.setCellValue(headers.get(i));
+            cell.setCellStyle(headerStyle);
         }
         //创建内容
         for (int i = 0,length = data.size(); i < length; i++){
-            row1 = hssfSheet.createRow(i + 2);
+            row1 = sheet.createRow(i + 2);
             T t = data.get(i);
             int k = 0;
             for (Field field : this.fields){
@@ -345,10 +347,10 @@ public class Excel<T> {
                         row1.setHeightInPoints(excelColumn.height());
                     }
                     // 设置列宽
-                    hssfSheet.setColumnWidth(k,(int)((excelColumn.width() + 0.72) * 256));
+                    sheet.setColumnWidth(k,(int)((excelColumn.width() + 0.72) * 256));
                     //将内容按顺序赋给对应列对象
-                    HSSFCell hssfCell = row1.createCell(k++);
-                    hssfCell.setCellStyle(gridStyle.get(field.getName()));
+                    Cell cell = row1.createCell(k++);
+                    cell.setCellStyle(gridStyle.get(field.getName()));
                     field.setAccessible(true);
                     String defaultValue = excelColumn.defaultValue();
                     Object val = field.get(t);
@@ -363,33 +365,33 @@ public class Excel<T> {
                             val += suffix;
                         }
                         if (!"".equals(converExp)){
-                            hssfCell.setCellValue(convertByExp(String.valueOf(val),converExp));
+                            cell.setCellValue(convertByExp(String.valueOf(val),converExp));
                             continue;
                         }
                         if (String.class == fieldType){
-                            hssfCell.setCellValue(val.toString());
+                            cell.setCellValue(val.toString());
                         }else if (Integer.TYPE == fieldType || Integer.class == fieldType){
-                            hssfCell.setCellValue(Integer.parseInt(val.toString()));
+                            cell.setCellValue(Integer.parseInt(val.toString()));
                         }else if (Long.TYPE == fieldType || Long.class == fieldType){
-                            hssfCell.setCellValue(Long.parseLong(val.toString()));
+                            cell.setCellValue(Long.parseLong(val.toString()));
                         }else if (Float.TYPE == fieldType || Float.class == fieldType){
-                            hssfCell.setCellValue(Float.parseFloat(val.toString()));
+                            cell.setCellValue(Float.parseFloat(val.toString()));
                         }else if (Double.TYPE == fieldType || Double.class == fieldType){
-                            hssfCell.setCellValue(Double.parseDouble(val.toString()));
+                            cell.setCellValue(Double.parseDouble(val.toString()));
                         }else if (BigDecimal.class == fieldType){
-                            hssfCell.setCellValue(Double.parseDouble(val.toString()));
+                            cell.setCellValue(Double.parseDouble(val.toString()));
                         }else if (Date.class == fieldType){
                             if ("".equals(excelColumn.dateformat())){
-                                hssfCell.setCellValue(val.toString());
+                                cell.setCellValue(val.toString());
                             }else {
-                                hssfCell.setCellValue(new SimpleDateFormat(excelColumn.dateformat()).format(val));
+                                cell.setCellValue(new SimpleDateFormat(excelColumn.dateformat()).format(val));
                             }
                         }
                     }
                 }
             }
         }
-        return hssfWorkbook;
+        return workbook;
     }
 
     /**
@@ -419,17 +421,17 @@ public class Excel<T> {
     /**
      * 设置sheet样式(可选)
      */
-    public HSSFSheet setSheetStyle(HSSFWorkbook hssfWorkbook,String title){
+    public Sheet setSheetStyle(Workbook workbook,String title){
         if (Objects.equals(this.titleStyle,null) && this.clazz.isAnnotationPresent(ExcelSheet.class)){
             ExcelSheet excelSheet = this.clazz.getAnnotation(ExcelSheet.class);
             String titleVal = "".equals(excelSheet.name()) ? title : excelSheet.name();
-            HSSFSheet hssfSheet = hssfWorkbook.createSheet(titleVal);
+            Sheet sheet = workbook.createSheet(titleVal);
             //产生标题行
-            HSSFRow hssfRow = hssfSheet.createRow(0);
-            HSSFCell cell = hssfRow.createCell(0);
+            Row row = sheet.createRow(0);
+            Cell cell = row.createCell(0);
             cell.setCellValue(titleVal);
             // 标题样式
-            HSSFCellStyle style = hssfWorkbook.createCellStyle();
+            CellStyle style = workbook.createCellStyle();
             style.setBorderBottom(BorderStyle.THIN);
             style.setBorderLeft(BorderStyle.THIN);
             style.setBorderRight(BorderStyle.THIN);
@@ -441,10 +443,10 @@ public class Excel<T> {
             style.setWrapText(excelSheet.wrap());
             style.setLocked(excelSheet.lock());
             if (excelSheet.lock()) {
-                hssfSheet.protectSheet(excelSheet.lockPassword());
+                sheet.protectSheet(excelSheet.lockPassword());
             }
             //设置标题字体
-            Font titleFont = hssfWorkbook.createFont();
+            Font titleFont = workbook.createFont();
             titleFont.setFontHeightInPoints(excelSheet.fontSize());
             titleFont.setColor(excelSheet.color().getIndex());
             titleFont.setItalic(excelSheet.italic());
@@ -454,55 +456,55 @@ public class Excel<T> {
             }
             style.setFont(titleFont);
             cell.setCellStyle(style);
-            return hssfSheet;
+            return sheet;
         }else if (this.titleStyle != null){// 自定义样式
-            HSSFSheet hssfSheet = hssfWorkbook.createSheet(title);
+            Sheet sheet = workbook.createSheet(title);
             //产生标题行
-            HSSFRow hssfRow = hssfSheet.createRow(0);
-            HSSFCell cell = hssfRow.createCell(0);
+            Row row = sheet.createRow(0);
+            Cell cell = row.createCell(0);
             cell.setCellValue(title);
-            cell.setCellStyle(this.titleStyle.execute(hssfWorkbook));
-            return hssfSheet;
+            cell.setCellStyle(this.titleStyle.execute(workbook));
+            return sheet;
         }else {// 默认样式
-            HSSFSheet hssfSheet = hssfWorkbook.createSheet(title);
+            Sheet sheet = workbook.createSheet(title);
             //产生标题行
-            HSSFRow hssfRow = hssfSheet.createRow(0);
-            HSSFCell cell = hssfRow.createCell(0);
+            Row row = sheet.createRow(0);
+            Cell cell = row.createCell(0);
             cell.setCellValue(title);
-            HSSFCellStyle style = hssfWorkbook.createCellStyle();
+            CellStyle style = workbook.createCellStyle();
             style.setAlignment(HorizontalAlignment.CENTER);   //设置居中样式
             style.setVerticalAlignment(VerticalAlignment.CENTER);
             style.setLocked(false);
             //设置标题字体
-            Font titleFont = hssfWorkbook.createFont();
+            Font titleFont = workbook.createFont();
             titleFont.setFontHeightInPoints((short) 14);
             style.setFont(titleFont);
             cell.setCellStyle(style);
-            return hssfSheet;
+            return sheet;
         }
     }
 
     /**
      * 设置表头注解样式(可选)
      */
-    public HSSFCellStyle setHeadStyle(HSSFWorkbook hssfWorkbook,HSSFSheet hssfSheet){
+    public CellStyle setHeadStyle(Workbook workbook,Sheet sheet){
         if (Objects.equals(this.headerStyle,null) && this.clazz.isAnnotationPresent(ExcelHead.class)){// 注解样式
             ExcelHead excelHead = this.clazz.getAnnotation(ExcelHead.class);
-            HSSFCellStyle hssfCellStyle = hssfWorkbook.createCellStyle();
-            hssfCellStyle.setBorderBottom(BorderStyle.THIN);
-            hssfCellStyle.setBorderLeft(BorderStyle.THIN);
-            hssfCellStyle.setBorderRight(BorderStyle.THIN);
-            hssfCellStyle.setBorderTop(BorderStyle.THIN);
-            hssfCellStyle.setAlignment(excelHead.align());
-            hssfCellStyle.setVerticalAlignment(excelHead.vertical());
-            hssfCellStyle.setWrapText(excelHead.wrap());
-            hssfCellStyle.setFillForegroundColor(excelHead.backColor().getIndex());
-            hssfCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            hssfCellStyle.setLocked(excelHead.lock());
+            CellStyle cellStyle = workbook.createCellStyle();
+            cellStyle.setBorderBottom(BorderStyle.THIN);
+            cellStyle.setBorderLeft(BorderStyle.THIN);
+            cellStyle.setBorderRight(BorderStyle.THIN);
+            cellStyle.setBorderTop(BorderStyle.THIN);
+            cellStyle.setAlignment(excelHead.align());
+            cellStyle.setVerticalAlignment(excelHead.vertical());
+            cellStyle.setWrapText(excelHead.wrap());
+            cellStyle.setFillForegroundColor(excelHead.backColor().getIndex());
+            cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            cellStyle.setLocked(excelHead.lock());
             if (excelHead.lock()) {
-                hssfSheet.protectSheet(excelHead.lockPassword());
+                sheet.protectSheet(excelHead.lockPassword());
             }
-            HSSFFont font = hssfWorkbook.createFont();
+            Font font = workbook.createFont();
             font.setFontHeightInPoints(excelHead.fontSize());
             font.setColor(excelHead.color().getIndex());
             font.setItalic(excelHead.italic());
@@ -510,20 +512,20 @@ public class Excel<T> {
             if (!"".equals(excelHead.fontName())){
                 font.setFontName(excelHead.fontName());
             }
-            hssfCellStyle.setFont(font);
-            return hssfCellStyle;
+            cellStyle.setFont(font);
+            return cellStyle;
         }else if (this.headerStyle != null){// 自定义样式
-            return this.headerStyle.execute(hssfWorkbook);
+            return this.headerStyle.execute(workbook);
         }else {// 默认样式
-            HSSFCellStyle hssfCellStyle = hssfWorkbook.createCellStyle();
-            hssfCellStyle.setAlignment(HorizontalAlignment.CENTER);   //设置水平居中样式
-            hssfCellStyle.setVerticalAlignment(VerticalAlignment.CENTER);   //设置上下居中样式
-            hssfCellStyle.setBorderBottom(BorderStyle.THIN);
-            hssfCellStyle.setBorderLeft(BorderStyle.THIN);
-            hssfCellStyle.setBorderRight(BorderStyle.THIN);
-            hssfCellStyle.setBorderTop(BorderStyle.THIN);
-            hssfCellStyle.setLocked(false);
-            return hssfCellStyle;
+            CellStyle cellStyle = workbook.createCellStyle();
+            cellStyle.setAlignment(HorizontalAlignment.CENTER);   //设置水平居中样式
+            cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);   //设置上下居中样式
+            cellStyle.setBorderBottom(BorderStyle.THIN);
+            cellStyle.setBorderLeft(BorderStyle.THIN);
+            cellStyle.setBorderRight(BorderStyle.THIN);
+            cellStyle.setBorderTop(BorderStyle.THIN);
+            cellStyle.setLocked(false);
+            return cellStyle;
         }
     }
 
@@ -532,7 +534,7 @@ public class Excel<T> {
      * param excel
      * param style
      */
-    private HSSFCellStyle setCellStyle(ExcelColumn excelColumn, HSSFCellStyle style, Font font){
+    private CellStyle setCellStyle(ExcelColumn excelColumn, CellStyle style, Font font){
         // 创建锁定的单元格
         //HSSFCellStyle style2 = hssfWorkbook.createCellStyle();
         style.setLocked(excelColumn.lock());

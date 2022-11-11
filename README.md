@@ -10,7 +10,7 @@
         <img src="https://img.shields.io/badge/version-1.3.3.RELEASE-orange" alt="version-1.3.3.RELEASE" />
     </a>
     <a href="https://github.com/chichengyu/task-spring-boot-starter">
-        <img src="https://img.shields.io/badge/last version-1.3.15.RELEASE-green" alt="version-1.3.15.RELEASE" />
+        <img src="https://img.shields.io/badge/last version-1.3.16.RELEASE-green" alt="version-1.3.16.RELEASE" />
     </a>
 </p>
 
@@ -18,7 +18,7 @@
 自定义spring定时任务starter，sql可执行创建表。有两种使用方式：   
  - :heavy_check_mark: 方式1: [spring中的 TaskScheduler](#spring中的TaskScheduler) ` (持久化时执行 sql/job.sql) `
  - :heavy_check_mark: 方式2: [Quartz 任务调度框架](#Quartz任务调度框架) ` (持久化时执行 sql/quartz.sql )`
- - 其他工具类：[Excel工具类(1.3.15.RELEASE版本集成)](https://github.com/chichengyu/task-spring-boot-starter/blob/main/EXCEL.md)
+ - 其他工具类：[Excel工具类(1.3.16.RELEASE版本集成)](https://github.com/chichengyu/task-spring-boot-starter/blob/main/EXCEL.md)
 
 :warning:注：sql文件 ` job_task 任务表`/ ` job_task_log 任务日志表`，需要持久化的可以创建表，在添加任务的同时插入表中。
 
