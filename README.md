@@ -50,7 +50,7 @@ logging:
     <version>1.3.3.RELEASE</version>
 </dependency>
 
-<!-- 2.0.0.RELEASE开始集成 Quartz（只使用定时器，排除excel） -->
+<!-- 2.0.0.RELEASE集成 Quartz（只使用定时器，排除excel） -->
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
