@@ -33,10 +33,10 @@ Excel的工具类，方便导入与导出,提供三个注解
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
         </exclusion>
-        <dependency>
+        <exclusion>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
-        </dependency>
+        </exclusion>
     </exclusions>
 </dependency>
 ```
