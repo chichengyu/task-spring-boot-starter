@@ -31,10 +31,6 @@ Excel的工具类，方便导入与导出,提供三个注解
     <exclusions>
         <exclusion>
             <groupId>org.apache.poi</groupId>
-            <artifactId>poi</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
         </exclusion>
     </exclusions>

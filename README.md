@@ -59,10 +59,6 @@ logging:
     <exclusions>
         <exclusion>
             <groupId>org.apache.poi</groupId>
-            <artifactId>poi</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
         </exclusion>
     </exclusions>
@@ -118,10 +114,6 @@ public class TestTask implements ITask<String> {
         <exclusion>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-quartz</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi</artifactId>
         </exclusion>
         <exclusion>
             <groupId>org.apache.poi</groupId>
@@ -210,10 +202,6 @@ public class TestController {
     <version>2.1.1.RELEASE</version>
     <!-- 方式二(Quartz)，排除 excel -->
     <exclusions>
-        <exclusion>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi</artifactId>
-        </exclusion>
         <exclusion>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
