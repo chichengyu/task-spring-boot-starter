@@ -94,7 +94,7 @@ public class TestTask implements ITask<String> {
 ### [spring中的TaskScheduler](#使用说明)
 :pushpin: 引入依赖,:lollipop:排除多余的 ` Quartz 依赖`,:lollipop:也可以引入之前的 ` 1.2.7.RELEASE `版本
 ```
-<!-- 1.3.3.RELEASE开始集成 Quartz -->
+<!-- 1.3.3.RELEASE开始集成 Quartz（2.0.0.RELEASE也如此引入） -->
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
