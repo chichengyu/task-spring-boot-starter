@@ -107,6 +107,28 @@ public class TestTask implements ITask<String> {
         </exclusion>
     </exclusions>
 </dependency>
+
+<!-- 2.0.0.RELEASE -->
+<dependency>
+    <groupId>io.github.chichengyu</groupId>
+    <artifactId>task-spring-boot-starter</artifactId>
+    <version>2.0.0.RELEASE</version>
+    <!-- 方式一(spring中的TaskScheduler)，排除 Quartz 与 excel -->
+    <exclusions>
+        <exclusion>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-quartz</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
 ```
 :zap::zap::zap: 一定要排除`Quartz依赖` :zap::zap::zap:,虽然不影响，但总归使用项目更简洁:heart::heart::heart:  
 :lollipop:创建一个配置文件 ` TaskConfig.java `
@@ -179,6 +201,26 @@ public class TestController {
 然后启动项目，访问接口，即可看到定时任务执行。:dango::dango::dango::dango::dango::dango::dango::dango::dango::dango::dango::dango:
 
 ### [Quartz任务调度框架](#使用说明)
+引包
+```
+<!-- 2.0.0.RELEASE -->
+<dependency>
+    <groupId>io.github.chichengyu</groupId>
+    <artifactId>task-spring-boot-starter</artifactId>
+    <version>2.0.0.RELEASE</version>
+    <!-- 方式二(Quartz)，排除 excel -->
+    <exclusions>
+        <exclusion>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+```
 :pushpin: 创建一个配置文件 ` TaskQuartzConfig.java `
 ```
 @Slf4j
