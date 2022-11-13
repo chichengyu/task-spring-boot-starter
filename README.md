@@ -49,6 +49,24 @@ logging:
     <artifactId>task-spring-boot-starter</artifactId>
     <version>1.3.3.RELEASE</version>
 </dependency>
+
+<!-- 2.0.0.RELEASE开始集成 Quartz（只使用定时器，排除excel） -->
+<dependency>
+    <groupId>io.github.chichengyu</groupId>
+    <artifactId>task-spring-boot-starter</artifactId>
+    <version>2.0.0.RELEASE</version>
+    <!-- 排除多余 excel -->
+    <exclusions>
+        <exclusion>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
 ```
 第1步:point_right:：创建任务Bean类  ` TestTask `,需要实现接口 ` com.job.task.ITask<string> `,多个定时器(`创建多个任务Bean类实现接口ITask<string>`)
 ```
