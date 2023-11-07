@@ -30,6 +30,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
@@ -162,6 +163,9 @@ public class Excel<T> {
                                     val = reverseByExp(String.valueOf(val),converExp);
                                 }
                                 try {
+                                    if (!excelColumn.handler().equals(ExcelHandlerAdapter.class)){
+                                        val = dataFormatHandlerAdapter(val,excelColumn);
+                                    }
                                     if (String.class == fieldType){
                                         field.set(t,val.toString());
                                     }else if (Integer.TYPE == fieldType || Integer.class == fieldType){
@@ -375,6 +379,10 @@ public class Excel<T> {
                         Class<?> fieldType = field.getType();
                         if (!"".equals(suffix)){
                             val += suffix;
+                        }
+                        if (!excelColumn.handler().equals(ExcelHandlerAdapter.class)){
+                            cell.setCellValue(dataFormatHandlerAdapter(val,excelColumn));
+                            continue;
                         }
                         if (!"".equals(converExp)){
                             cell.setCellValue(convertByExp(String.valueOf(val),converExp));
@@ -606,6 +614,41 @@ public class Excel<T> {
             }
         }
         return propertyValue;
+    }
+
+    /**
+     * 数据处理器
+     * @param value 数据值
+     * @param excelColumn 数据注解
+     * @return
+     */
+    public String dataFormatHandlerAdapter(Object value, ExcelColumn excelColumn) {
+        try {
+            Object instance = excelColumn.handler().newInstance();
+            Method formatMethod = excelColumn.handler().getMethod("format", new Class[] { Object.class });
+            value = formatMethod.invoke(instance, value);
+        } catch (Exception e) {
+            System.out.println("=====["+excelColumn.handler().getName()+"],不能格式化数据,Error:" + e.getMessage()+"=====");
+        }
+        return toStr(value,excelColumn.defaultValue());
+    }
+
+    /**
+     * 转换为字符串<br>
+     * 如果给定的值为null，或者转换失败，返回默认值<br>
+     * 转换失败不会报错
+     * @param value 被转换的值
+     * @param defaultValue 转换错误时的默认值
+     * @return 结果
+     */
+    private String toStr(Object value, String defaultValue) {
+        if (null == value) {
+            return defaultValue;
+        }
+        if (value instanceof String) {
+            return (String) value;
+        }
+        return value.toString();
     }
 
     /**

@@ -62,7 +62,7 @@ public class TestPojo implements Serializable {
     @ExcelColumn(name = "创建日期",width = 20,dateformat = "yyyy-MM-dd HH:mm:ss",lock = true,bold = true)
     private Date createTime;
 
-    @ExcelColumn(name = "年龄",converExp = "0=男,1=女,2=未知",fontSize = 16,fontName = "微软雅黑",style = true,lock = true)
+    @ExcelColumn(name = "年龄",handler = AgeHandler.class,converExp = "0=男,1=女,2=未知",fontSize = 16,fontName = "微软雅黑",style = true,lock = true)
     private Integer age;
 
     @ExcelColumn(name = "测试数字默认值")
@@ -133,6 +133,21 @@ public class ExcelTestController extends BaseController{
         excel.export(response,"用户信息表",list);
         // 也可以直接使用静态方法
         Excel.type(TestPojo.class).export(response,"用户信息表",list);
+    }
+}
+```
+注：如果想在导出或者导入的时候处理数据,可以实现` 数据处理器接口ExcelHandlerAdapter `，如下:
+```
+/**
+ * author chics
+ * 2023/11/7
+ */
+public class AgeHandler implements ExcelHandlerAdapter {
+
+    @Override
+    public Object format(Object value) {
+        System.out.println("------年龄数据处理器执行了，参数"+value);
+        return 100;
     }
 }
 ```

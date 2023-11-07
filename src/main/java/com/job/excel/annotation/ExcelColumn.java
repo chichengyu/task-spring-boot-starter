@@ -1,5 +1,6 @@
 package com.job.excel.annotation;
 
+import com.job.excel.ExcelHandlerAdapter;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
@@ -135,4 +136,9 @@ public @interface ExcelColumn {
      * 设置只能选择不能输入的列内容.
      */
     String[] combo() default {};
+
+    /**
+     * 自定义数据处理器
+     */
+    Class<?> handler() default ExcelHandlerAdapter.class;
 }
