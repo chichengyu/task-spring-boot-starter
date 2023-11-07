@@ -7,17 +7,23 @@ import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataValidation;
+import org.apache.poi.ss.usermodel.DataValidationConstraint;
+import org.apache.poi.ss.usermodel.DataValidationHelper;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFDataValidation;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.FileInputStream;
@@ -284,6 +290,7 @@ public class Excel<T> {
         Sheet sheet = this.setSheetStyle(workbook,title);
         Map<String,CellStyle> gridStyle = new HashMap<>();// 表格样式
         List<String> headers = new ArrayList<>();
+        int colIdx = 0;
         for (Field field : this.fields){
             if (field.isAnnotationPresent(ExcelColumn.class)){
                 field.setAccessible(true);
@@ -299,6 +306,16 @@ public class Excel<T> {
                 if (excelColumn.lock()) {
                     sheet.protectSheet(excelColumn.lockPassword());
                 }
+                if (!"".equals(excelColumn.prompt()) || excelColumn.combo().length > 0){
+                    if (excelColumn.combo().length > 15 || String.join("", excelColumn.combo()).length() > 255){
+                        // 如果下拉数大于15或字符串长度大于255，则使用一个新sheet存储，避免生成的模板下拉值获取不到
+                        setXSSFValidationWithHidden(workbook,sheet, excelColumn, 1, 100, colIdx, colIdx);
+                    }else {
+                        // 提示信息或只能选择不能输入的列内容.
+                        setPromptOrValidation(sheet, excelColumn, 1, 100, colIdx, colIdx);
+                    }
+                }
+                colIdx++;
             }
         }
         //创建标题合并行
@@ -589,6 +606,82 @@ public class Excel<T> {
             }
         }
         return propertyValue;
+    }
+
+    /**
+     * 设置某些列的值只能输入预制的数据,显示下拉框（兼容超出一定数量的下拉框）.
+     * @param sheet 要设置的sheet.
+     * @param excelColumn 注解
+     * @param firstRow 开始行
+     * @param endRow 结束行
+     * @param firstCol 开始列
+     * @param endCol 结束列
+     */
+    public void setXSSFValidationWithHidden(Workbook workbook,Sheet sheet, ExcelColumn excelColumn, int firstRow, int endRow, int firstCol, int endCol) {
+        String hideSheetName = "combo_" + firstCol + "_" + endCol;
+        Sheet hideSheet = workbook.createSheet(hideSheetName); // 用于存储 下拉菜单数据
+        String promptContent = excelColumn.prompt();
+        String[] textlist = excelColumn.combo();
+        for (int i = 0,len = textlist.length; i < len; i++) {
+            hideSheet.createRow(i).createCell(0).setCellValue(textlist[i]);
+        }
+        // 创建名称，可被其他单元格引用
+        Name name = workbook.createName();
+        name.setNameName(hideSheetName + "_data");
+        name.setRefersToFormula(hideSheetName + "!$A$1:$A$" + textlist.length);
+        DataValidationHelper helper = sheet.getDataValidationHelper();
+        // 加载下拉列表内容
+        DataValidationConstraint constraint = helper.createFormulaListConstraint(hideSheetName + "_data");
+        // 设置数据有效性加载在哪个单元格上,四个参数分别是：起始行、终止行、起始列、终止列
+        CellRangeAddressList regions = new CellRangeAddressList(firstRow, endRow, firstCol, endCol);
+        // 数据有效性对象
+        DataValidation dataValidation = helper.createValidation(constraint, regions);
+        if (null != promptContent && !"".equals(promptContent)) {
+            // 如果设置了提示信息则鼠标放上去提示
+            dataValidation.createPromptBox("注:"+excelColumn.name(), promptContent);
+            dataValidation.setShowPromptBox(true);
+        }
+        // 处理Excel兼容性问题
+        if (dataValidation instanceof XSSFDataValidation) {
+            dataValidation.setSuppressDropDownArrow(true);
+            dataValidation.setShowErrorBox(true);
+        } else {
+            dataValidation.setSuppressDropDownArrow(false);
+        }
+        sheet.addValidationData(dataValidation);
+        // 设置hiddenSheet隐藏
+        workbook.setSheetHidden(workbook.getSheetIndex(hideSheet), true);
+    }
+
+    /**
+     * 设置 POI XSSFSheet 单元格提示或选择框
+     * @param sheet 表单
+     * @param excelColumn 注解
+     * @param firstRow 开始行
+     * @param endRow 结束行
+     * @param firstCol 开始列
+     * @param endCol 结束列
+     */
+    public void setPromptOrValidation(Sheet sheet, ExcelColumn excelColumn, int firstRow, int endRow, int firstCol, int endCol) {
+        String promptContent = excelColumn.prompt();
+        String[] textlist = excelColumn.combo();
+        DataValidationHelper helper = sheet.getDataValidationHelper();
+        DataValidationConstraint constraint = textlist.length > 0 ? helper.createExplicitListConstraint(textlist) : helper.createCustomConstraint("DD1");
+        CellRangeAddressList regions = new CellRangeAddressList(firstRow, endRow, firstCol, endCol);
+        DataValidation dataValidation = helper.createValidation(constraint, regions);
+        if (promptContent != null && !"".equals(promptContent)){
+            // 如果设置了提示信息则鼠标放上去提示
+            dataValidation.createPromptBox("注:"+excelColumn.name(), promptContent);
+            dataValidation.setShowPromptBox(true);
+        }
+        // 处理Excel兼容性问题
+        if (dataValidation instanceof XSSFDataValidation) {
+            dataValidation.setSuppressDropDownArrow(true);
+            dataValidation.setShowErrorBox(true);
+        } else {
+            dataValidation.setSuppressDropDownArrow(false);
+        }
+        sheet.addValidationData(dataValidation);
     }
 
     /**

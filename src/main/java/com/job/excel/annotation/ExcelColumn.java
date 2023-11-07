@@ -125,4 +125,14 @@ public @interface ExcelColumn {
      * 样式是否自定义
      */
     boolean style() default false;
+
+    /**
+     * 提示信息
+     */
+    String prompt() default "";
+
+    /**
+     * 设置只能选择不能输入的列内容.
+     */
+    String[] combo() default {};
 }
