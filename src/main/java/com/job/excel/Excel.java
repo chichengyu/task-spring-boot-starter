@@ -311,12 +311,16 @@ public class Excel<T> {
                     sheet.protectSheet(excelColumn.lockPassword());
                 }
                 if (!"".equals(excelColumn.prompt()) || excelColumn.combo().length > 0){
+                    int endRow = 100;
+                    if (!data.isEmpty()){
+                        endRow = data.size() + 1;
+                    }
                     if (excelColumn.combo().length > 15 || String.join("", excelColumn.combo()).length() > 255){
                         // 如果下拉数大于15或字符串长度大于255，则使用一个新sheet存储，避免生成的模板下拉值获取不到
-                        setXSSFValidationWithHidden(workbook,sheet, excelColumn, 1, 100, colIdx, colIdx);
+                        setXSSFValidationWithHidden(workbook,sheet, excelColumn, 1, endRow, colIdx, colIdx);
                     }else {
                         // 提示信息或只能选择不能输入的列内容.
-                        setPromptOrValidation(sheet, excelColumn, 1, 100, colIdx, colIdx);
+                        setPromptOrValidation(sheet, excelColumn, 1, endRow, colIdx, colIdx);
                     }
                 }
                 colIdx++;
