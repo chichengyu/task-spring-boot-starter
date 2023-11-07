@@ -628,7 +628,11 @@ public class Excel<T> {
             Method formatMethod = excelColumn.handler().getMethod("format", new Class[] { Object.class });
             value = formatMethod.invoke(instance, value);
         } catch (Exception e) {
-            System.out.println("=====["+excelColumn.handler().getName()+"],不能格式化数据,Error:" + e.getMessage()+"=====");
+            String message = e.getMessage();
+            if (message==null || "".equals(message)){
+                message = e.getCause().getMessage();
+            }
+            System.out.println("------------------["+excelColumn.handler().getName()+"],格式化数据异常,Error:" + message +"------------------");
         }
         return toStr(value,excelColumn.defaultValue());
     }
