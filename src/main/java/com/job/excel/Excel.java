@@ -3,18 +3,28 @@ package com.job.excel;
 import com.job.excel.annotation.ExcelColumn;
 import com.job.excel.annotation.ExcelHead;
 import com.job.excel.annotation.ExcelSheet;
+import org.apache.poi.hssf.usermodel.HSSFClientAnchor;
+import org.apache.poi.hssf.usermodel.HSSFPicture;
+import org.apache.poi.hssf.usermodel.HSSFPictureData;
+import org.apache.poi.hssf.usermodel.HSSFShape;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ooxml.POIXMLDocumentPart;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.DataValidation;
 import org.apache.poi.ss.usermodel.DataValidationConstraint;
 import org.apache.poi.ss.usermodel.DataValidationHelper;
 import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.Drawing;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Name;
+import org.apache.poi.ss.usermodel.PictureData;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
@@ -23,15 +33,26 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
 import org.apache.poi.xssf.usermodel.XSSFDataValidation;
+import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFPicture;
+import org.apache.poi.xssf.usermodel.XSSFShape;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTMarker;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -113,6 +134,14 @@ public class Excel<T> {
         // 循环工作表Sheet
         Sheet hssfSheet = wb.getSheetAt(0);
         if (hssfSheet != null) {
+            Map<String, PictureData> pictures;
+            if (!(wb instanceof HSSFWorkbook)){
+                // 2007版本
+                pictures = getSheetPictures07((XSSFSheet) hssfSheet, (XSSFWorkbook) wb);
+            }else {
+                // 2003版本
+                pictures = getSheetPictures03((HSSFSheet) hssfSheet, (HSSFWorkbook) wb);
+            }
             // coloumNum 获取表头名称 对应关系  从1行开始先读取列属性,表头不算
             Row row = hssfSheet.getRow(startRowNum);
             int coloumNum = row.getPhysicalNumberOfCells();// 总列数
@@ -141,6 +170,14 @@ public class Excel<T> {
                                 field.setAccessible(true);
                                 Class<?> fieldType = field.getType();
                                 Object val = getCellValue(sheetRow.getCell(i));
+                                if (ExcelColumn.ColumnType.FILE == excelColumn.cellType() && pictures != null && !"".equals(pictures)){
+                                    PictureData image = pictures.get(rowNum + "_" + i);
+                                    if (image == null) {
+                                        val = "";
+                                    } else {
+                                        val = dataFormatHandlerAdapter(null,image.getData(),excelColumn);
+                                    }
+                                }
                                 if (val == null || "".equals(val)){
                                     continue;
                                 }
@@ -163,8 +200,8 @@ public class Excel<T> {
                                     val = reverseByExp(String.valueOf(val),converExp);
                                 }
                                 try {
-                                    if (!excelColumn.handler().equals(ExcelHandlerAdapter.class)){
-                                        val = dataFormatHandlerAdapter(val,excelColumn);
+                                    if (ExcelColumn.ColumnType.FILE != excelColumn.cellType() && !excelColumn.handler().equals(ExcelHandlerAdapter.class)){
+                                        val = dataFormatHandlerAdapter(val,null,excelColumn);
                                     }
                                     if (String.class == fieldType){
                                         field.set(t,val.toString());
@@ -384,8 +421,14 @@ public class Excel<T> {
                         if (!"".equals(suffix)){
                             val += suffix;
                         }
-                        if (!excelColumn.handler().equals(ExcelHandlerAdapter.class)){
-                            cell.setCellValue(dataFormatHandlerAdapter(val,excelColumn));
+                        if (ExcelColumn.ColumnType.FILE == excelColumn.cellType()){
+                            byte[] fileBytes = readFile(toStr(val, defaultValue));
+                            ClientAnchor anchor = new XSSFClientAnchor(0, 0, 0, 0, (short) cell.getColumnIndex(), cell.getRow().getRowNum(), (short) (cell.getColumnIndex() + 1), cell.getRow().getRowNum() + 1);
+                            getDrawingPatriarch(cell.getSheet()).createPicture(anchor, cell.getSheet().getWorkbook().addPicture(fileBytes, getImageType(fileBytes)));
+                            continue;
+                        }
+                        if (ExcelColumn.ColumnType.FILE != excelColumn.cellType() && !excelColumn.handler().equals(ExcelHandlerAdapter.class)){
+                            cell.setCellValue(toStr(dataFormatHandlerAdapter(val,null,excelColumn),excelColumn.defaultValue()));
                             continue;
                         }
                         if (!"".equals(converExp)){
@@ -623,14 +666,15 @@ public class Excel<T> {
     /**
      * 数据处理器
      * @param value 数据值
-     * @param excelColumn 数据注解
+     * @param fileStream 字节流
+     * @param excelColumn 注解
      * @return
      */
-    public String dataFormatHandlerAdapter(Object value, ExcelColumn excelColumn) {
+    public Object dataFormatHandlerAdapter(Object value,byte[] fileStream, ExcelColumn excelColumn) {
         try {
             Object instance = excelColumn.handler().newInstance();
-            Method formatMethod = excelColumn.handler().getMethod("format", new Class[] { Object.class });
-            value = formatMethod.invoke(instance, value);
+            Method formatMethod = excelColumn.handler().getMethod("format", new Class[] { Object.class,byte[].class });
+            value = formatMethod.invoke(instance, value,fileStream);
         } catch (Exception e) {
             String message = e.getMessage();
             if (message==null || "".equals(message)){
@@ -638,7 +682,7 @@ public class Excel<T> {
             }
             System.out.println("------------------["+excelColumn.handler().getName()+"],格式化数据异常,Error:" + message +"------------------");
         }
-        return toStr(value,excelColumn.defaultValue());
+        return value;
     }
 
     /**
@@ -657,6 +701,82 @@ public class Excel<T> {
             return (String) value;
         }
         return value.toString();
+    }
+
+    /**
+     * 获取Excel2007图片
+     * @param sheet 当前sheet对象
+     * @param workbook 工作簿对象
+     * @return Map key:图片单元格索引（1_1）String，value:图片流PictureData
+     */
+    public static Map<String, PictureData> getSheetPictures07(XSSFSheet sheet, XSSFWorkbook workbook){
+        Map<String, PictureData> sheetIndexPicMap = new HashMap<String, PictureData>();
+        for (POIXMLDocumentPart dr : sheet.getRelations()) {
+            if (dr instanceof XSSFDrawing) {
+                XSSFDrawing drawing = (XSSFDrawing) dr;
+                List<XSSFShape> shapes = drawing.getShapes();
+                for (XSSFShape shape : shapes) {
+                    if (shape instanceof XSSFPicture) {
+                        XSSFPicture pic = (XSSFPicture) shape;
+                        XSSFClientAnchor anchor = pic.getPreferredSize();
+                        CTMarker ctMarker = anchor.getFrom();
+                        String picIndex = ctMarker.getRow() + "_" + ctMarker.getCol();
+                        sheetIndexPicMap.put(picIndex, pic.getPictureData());
+                    }
+                }
+            }
+        }
+        return sheetIndexPicMap;
+    }
+
+    /**
+     * 获取Excel2003图片
+     * @param sheet 当前sheet对象
+     * @param workbook 工作簿对象
+     * @return Map key:图片单元格索引（1_1）String，value:图片流PictureData
+     */
+    public static Map<String, PictureData> getSheetPictures03(HSSFSheet sheet, HSSFWorkbook workbook) {
+        Map<String, PictureData> sheetIndexPicMap = new HashMap<String, PictureData>();
+        List<HSSFPictureData> pictures = workbook.getAllPictures();
+        if (!pictures.isEmpty()) {
+            for (HSSFShape shape : sheet.getDrawingPatriarch().getChildren()) {
+                HSSFClientAnchor anchor = (HSSFClientAnchor) shape.getAnchor();
+                if (shape instanceof HSSFPicture) {
+                    HSSFPicture pic = (HSSFPicture) shape;
+                    int pictureIndex = pic.getPictureIndex() - 1;
+                    HSSFPictureData picData = pictures.get(pictureIndex);
+                    String picIndex = String.valueOf(anchor.getRow1()) + "_" + String.valueOf(anchor.getCol1());
+                    sheetIndexPicMap.put(picIndex, picData);
+                }
+            }
+            return sheetIndexPicMap;
+        } else {
+            return sheetIndexPicMap;
+        }
+    }
+
+    /**
+     * 获取画布
+     */
+    private Drawing<?> getDrawingPatriarch(Sheet sheet){
+        if (sheet.getDrawingPatriarch() == null) {
+            sheet.createDrawingPatriarch();
+        }
+        return sheet.getDrawingPatriarch();
+    }
+
+    /**
+     * 获取图片类型,设置图片插入类型
+     * @param value 文件流
+     */
+    private int getImageType(byte[] value) {
+        String type = getImageExtend(value);
+        if ("JPG".equalsIgnoreCase(type)){
+            return Workbook.PICTURE_TYPE_JPEG;
+        }else if ("PNG".equalsIgnoreCase(type)){
+            return Workbook.PICTURE_TYPE_PNG;
+        }
+        return Workbook.PICTURE_TYPE_JPEG;
     }
 
     /**
@@ -749,6 +869,78 @@ public class Excel<T> {
         response.addHeader("Pargam", "no-cache");
         response.addHeader("Cache-Control", "no-cache");
         return response;
+    }
+
+    /**
+     * 获取图像后缀
+     * @param photoByte 文件字节流
+     * @return 后缀名
+     */
+    private String getImageExtend(byte[] photoByte){
+        String strFileExtendName = "jpg";
+        if ((photoByte[0] == 71) && (photoByte[1] == 73) && (photoByte[2] == 70) && (photoByte[3] == 56) && ((photoByte[4] == 55) || (photoByte[4] == 57)) && (photoByte[5] == 97)){
+            strFileExtendName = "gif";
+        } else if ((photoByte[6] == 74) && (photoByte[7] == 70) && (photoByte[8] == 73) && (photoByte[9] == 70)){
+            strFileExtendName = "jpg";
+        } else if ((photoByte[0] == 66) && (photoByte[1] == 77)){
+            strFileExtendName = "bmp";
+        } else if ((photoByte[1] == 80) && (photoByte[2] == 78) && (photoByte[3] == 71)){
+            strFileExtendName = "png";
+        }
+        return strFileExtendName;
+    }
+
+    /**
+     * 读取文件为字节数据
+     * @param url 地址
+     * @return 字节数据
+     */
+    private byte[] readFile(String url) {
+        InputStream in = null;
+        try {
+            if (url.startsWith("http")){
+                // 网络地址
+                URL urlObj = new URL(url);
+                URLConnection urlConnection = urlObj.openConnection();
+                urlConnection.setConnectTimeout(30 * 1000);
+                urlConnection.setReadTimeout(60 * 1000);
+                urlConnection.setDoInput(true);
+                in = urlConnection.getInputStream();
+            } else {
+                // 本机地址
+                in = new FileInputStream(url);
+            }
+            return toByteArray(in);
+        } catch (Exception e) {
+            throw new RuntimeException("获取文件路径异常");
+        } finally {
+            if (in != null){
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    /**
+     * 获取文件字节数组
+     * @param in 文件输入流
+     * @return
+     * @throws IOException
+     */
+    public byte[] toByteArray(InputStream in) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int byteCount = 0;
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = in.read(buffer)) != -1){
+            out.write(buffer,0,bytesRead);
+            byteCount += bytesRead;
+        }
+        out.flush();
+        return out.toByteArray();
     }
 
     //---------------------------------------------- 不使用注解 ---------------------------------------------------------

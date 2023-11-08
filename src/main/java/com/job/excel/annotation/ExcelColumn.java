@@ -141,4 +141,24 @@ public @interface ExcelColumn {
      * 自定义数据处理器
      */
     Class<?> handler() default ExcelHandlerAdapter.class;
+
+    /**
+     * 导出类型（0数字 1字符串 2文件(包括图片)）
+     */
+    ColumnType cellType() default ColumnType.STRING;
+
+    enum ColumnType {
+        NUMERIC(0), STRING(1), FILE(2);
+        private final int value;
+
+        ColumnType(int value)
+        {
+            this.value = value;
+        }
+
+        public int value()
+        {
+            return this.value;
+        }
+    }
 }
