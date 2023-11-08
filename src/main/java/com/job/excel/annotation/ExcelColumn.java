@@ -151,13 +151,11 @@ public @interface ExcelColumn {
         NUMERIC(0), STRING(1), FILE(2);
         private final int value;
 
-        ColumnType(int value)
-        {
+        ColumnType(int value){
             this.value = value;
         }
 
-        public int value()
-        {
+        public int value(){
             return this.value;
         }
     }

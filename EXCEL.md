@@ -136,7 +136,7 @@ public class ExcelTestController extends BaseController{
     }
 }
 ```
-注：如果想在导出或者导入的时候处理数据,可以实现` 数据处理器接口ExcelHandlerAdapter `，如下:
+注：如果想在导出或者导入的时候处理数据,可以实现` 数据处理器接口ExcelHandlerAdapter `并配置注解`@ExcelColumn(handler = AgeHandler.class)`且实现方法` format `方法，然后编写如下代码:
 ```
 /**
  * author chics
@@ -145,12 +145,44 @@ public class ExcelTestController extends BaseController{
 public class AgeHandler implements ExcelHandlerAdapter {
 
     @Override
-    public Object format(Object value) {
+    public Object format(Object value,byte[] fileStream) {
         System.out.println("------年龄数据处理器执行了，参数"+value);
         return 100;
     }
 }
 ```
+即可执行处理数据。
+##### 文件处理(包括图片)
+实体文件的字段(也就是这注解` @ExcelColumn `标记的字段),一般设置为`string`字符串,因为路径字段就是字符串。
+###### 导出
+导出很简单，在文件路径字段上,配置注解` @ExcelColumn(name = "图片",cellType = ExcelColumn.ColumnType.FILE) `,即可完成，然后在导出的数据里设置文件路径字段(注：路径可以是本地路径,也可以是网络图片路径,总之路径能正常访问到文件即可)，即可实现导出图片到excel。
+
+###### 导入
+导入也很简单，首先，配置注解` @ExcelColumn(name = "图片",handler = ImgHandler.class,cellType = ExcelColumn.ColumnType.FILE) `,然后创建图片数据处理器` ImgHandler.java `并实现接口` ExcelHandlerAdapter `,且实现方法` format `方法，如下：
+```
+/**
+ * author chics
+ * 2023/11/7
+ */
+public class ImgHandler implements ExcelHandlerAdapter {
+
+    @Override
+    public Object format(Object value,byte[] fileStream) {
+        System.out.println("------图片数据处理器执行了------");
+        String fileName = this.getImageFileName(fileStream);
+        String path = "d:\\f\\"+fileName;
+        try {
+            // 这里我是保存到本地了，此处可以上传到oss ...
+            this.writeBytesToFile(fileStream,path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "http://baidu.com/"+path;
+    }
+}
+```
+即可完成图片导入。
+
 ##### 自定义样式(自定义样式与注解ExcelSheet/ExcelHead,可不设置,有默认样式,优先级:自定义 > 注解 > 默认)
 ```
 //excel文件名
