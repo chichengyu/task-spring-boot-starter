@@ -154,6 +154,11 @@ public class AgeHandler implements ExcelHandlerAdapter {
 即可执行处理数据。
 ##### 文件处理(包括图片)
 实体文件的字段(也就是这注解` @ExcelColumn `标记的字段),一般设置为`string`字符串,因为路径字段就是字符串。
+```
+@ExcelColumn(name = "图片",handler = ImgHandler.class,cellType = ExcelColumn.ColumnType.FILE)
+private String img;
+```
+
 ###### 导出
 导出很简单，在文件路径字段上,配置注解` @ExcelColumn(name = "图片",cellType = ExcelColumn.ColumnType.FILE) `,即可完成，然后在导出的数据里设置文件路径字段(注：路径可以是本地路径,也可以是网络图片路径,总之路径能正常访问到文件即可)，即可实现导出图片到excel。
 
