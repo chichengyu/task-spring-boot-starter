@@ -62,6 +62,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * Excel工具类
@@ -74,6 +75,15 @@ public class Excel<T> {
     private GridStyle gridStyle;// 表格样式
     private Class<T> clazz;
     private Field[] fields;
+    private Consumer<String> error;
+
+    public Consumer<String> getError() {
+        return error;
+    }
+
+    public void setError(Consumer<String> error) {
+        this.error = error;
+    }
 
     @FunctionalInterface
     public interface Style{
@@ -175,7 +185,7 @@ public class Excel<T> {
                                     if (image == null) {
                                         val = "";
                                     } else {
-                                        val = dataFormatHandlerAdapter(null,image.getData(),excelColumn);
+                                        val = dataFormatHandlerAdapter(null,image.getData(),excelColumn,rowNum);
                                     }
                                 }
                                 if (val == null || "".equals(val)){
@@ -201,7 +211,7 @@ public class Excel<T> {
                                 }
                                 try {
                                     if (ExcelColumn.ColumnType.FILE != excelColumn.cellType() && !excelColumn.handler().equals(ExcelHandlerAdapter.class)){
-                                        val = dataFormatHandlerAdapter(val,null,excelColumn);
+                                        val = dataFormatHandlerAdapter(val,null,excelColumn,rowNum);
                                     }
                                     if (String.class == fieldType){
                                         field.set(t,val.toString());
@@ -422,17 +432,19 @@ public class Excel<T> {
                             val += suffix;
                         }
                         if (ExcelColumn.ColumnType.FILE == excelColumn.cellType()){
-                            byte[] fileBytes = readFile(toStr(val, defaultValue));
-                            ClientAnchor anchor = new XSSFClientAnchor(0, 0, 0, 0, (short) cell.getColumnIndex(), cell.getRow().getRowNum(), (short) (cell.getColumnIndex() + 1), cell.getRow().getRowNum() + 1);
-                            getDrawingPatriarch(cell.getSheet()).createPicture(anchor, cell.getSheet().getWorkbook().addPicture(fileBytes, getImageType(fileBytes)));
-                            continue;
-                        }
-                        if (ExcelColumn.ColumnType.FILE != excelColumn.cellType() && !excelColumn.handler().equals(ExcelHandlerAdapter.class)){
-                            cell.setCellValue(toStr(dataFormatHandlerAdapter(val,null,excelColumn),excelColumn.defaultValue()));
+                            byte[] fileBytes = readFile(toStr(val, defaultValue),i,excelColumn);
+                            if (fileBytes != null){
+                                ClientAnchor anchor = new XSSFClientAnchor(0, 0, 0, 0, (short) cell.getColumnIndex(), cell.getRow().getRowNum(), (short) (cell.getColumnIndex() + 1), cell.getRow().getRowNum() + 1);
+                                getDrawingPatriarch(cell.getSheet()).createPicture(anchor, cell.getSheet().getWorkbook().addPicture(fileBytes, getImageType(fileBytes)));
+                            }
                             continue;
                         }
                         if (!"".equals(converExp)){
                             cell.setCellValue(convertByExp(String.valueOf(val),converExp));
+                            continue;
+                        }
+                        if (ExcelColumn.ColumnType.FILE != excelColumn.cellType() && !excelColumn.handler().equals(ExcelHandlerAdapter.class)){
+                            cell.setCellValue(toStr(dataFormatHandlerAdapter(val,null,excelColumn,i),excelColumn.defaultValue()));
                             continue;
                         }
                         if (String.class == fieldType){
@@ -668,9 +680,10 @@ public class Excel<T> {
      * @param value 数据值
      * @param fileStream 字节流
      * @param excelColumn 注解
+     * @param row 第几行
      * @return
      */
-    public Object dataFormatHandlerAdapter(Object value,byte[] fileStream, ExcelColumn excelColumn) {
+    public Object dataFormatHandlerAdapter(Object value,byte[] fileStream, ExcelColumn excelColumn,int row) {
         try {
             Object instance = excelColumn.handler().newInstance();
             Method formatMethod = excelColumn.handler().getMethod("format", new Class[] { Object.class,byte[].class });
@@ -680,7 +693,9 @@ public class Excel<T> {
             if (message==null || "".equals(message)){
                 message = e.getCause().getMessage();
             }
-            System.out.println("------------------["+excelColumn.handler().getName()+"],格式化数据异常,Error:" + message +"------------------");
+            if (error != null){
+                error.accept("第["+row+"]行,["+excelColumn.handler().getName()+"]格式化数据异常,Error:"+message);
+            }
         }
         return value;
     }
@@ -893,9 +908,11 @@ public class Excel<T> {
     /**
      * 读取文件为字节数据
      * @param url 地址
+     * @param row 第几行
+     * @param row 注解
      * @return 字节数据
      */
-    private byte[] readFile(String url) {
+    private byte[] readFile(String url,int row,ExcelColumn excelColumn) {
         InputStream in = null;
         try {
             if (url.startsWith("http")){
@@ -912,7 +929,13 @@ public class Excel<T> {
             }
             return toByteArray(in);
         } catch (Exception e) {
-            throw new RuntimeException("获取文件路径异常");
+            String message = e.getMessage();
+            if (message==null || "".equals(message)){
+                message = e.getCause().getMessage();
+            }
+            if (error != null){
+                error.accept("第["+row+"]行,["+excelColumn.name()+"]获取文件路径异常,Error:"+message);
+            }
         } finally {
             if (in != null){
                 try {
@@ -922,6 +945,7 @@ public class Excel<T> {
                 }
             }
         }
+        return null;
     }
 
     /**

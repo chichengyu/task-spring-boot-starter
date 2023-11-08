@@ -98,6 +98,8 @@ public class ExcelTestController extends BaseController{
         try{
             //excel文件名
             Excel<TestPojo> excel = new Excel<>(TestPojo.class);
+            // 打印error信息
+            excel.setError(error -> System.out.println(error));
             //List<TestPojo> pojoList = excel.read("d:/test.xls");
             InputStream inputStream = file.getInputStream();
             List<TestPojo> pojoList = excel.read(inputStream);
@@ -129,10 +131,14 @@ public class ExcelTestController extends BaseController{
             list.add(testPojo);*/
         }
         //excel文件名
-        Excel<TestPojo> excel = new Excel<>(TestPojo.class);
-        excel.export(response,"用户信息表",list);
+        //Excel<TestPojo> excel = new Excel<>(TestPojo.class);
+        //excel.export(response,"用户信息表",list);
         // 也可以直接使用静态方法
-        Excel.type(TestPojo.class).export(response,"用户信息表",list);
+        //Excel.type(TestPojo.class).export(response,"用户信息表",list);
+        Excel<TestPojo> excel = new Excel<>(TestPojo.class);
+        // 打印error信息
+        excel.setError(error -> System.out.println(error));
+        excel.export(response, "1111", data);
     }
 }
 ```
