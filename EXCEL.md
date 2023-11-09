@@ -11,7 +11,7 @@ Excel的工具类，方便导入与导出,提供三个注解
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>2.1.2.RELEASE</version>
+    <version>2.1.3.RELEASE</version>
     <!-- 排除多余 quartz  -->
     <exclusions>
         <exclusion>
@@ -21,12 +21,12 @@ Excel的工具类，方便导入与导出,提供三个注解
     </exclusions>
 </dependency>
 ```
-如果只是使用` 2.1.2.RELEASE ` 版本的 ` task定时任务`，可以参考下面导包坐标(排除多余依赖)，也可以直接使用之前版本[1.3.3.RELEASE](https://github.com/chichengyu/task-spring-boot-starter)(`只包含定时任务依赖`)，虽然不排除也没什么影响，但可以使项目体量小一些，导包
+如果只是使用` 2.1.3.RELEASE ` 版本的 ` task定时任务`，可以参考下面导包坐标(排除多余依赖)，也可以直接使用之前版本[1.3.3.RELEASE](https://github.com/chichengyu/task-spring-boot-starter)(`只包含定时任务依赖`)，虽然不排除也没什么影响，但可以使项目体量小一些，导包
 ```
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>2.1.2.RELEASE</version>
+    <version>2.1.3.RELEASE</version>
     <!-- 排除多余 excel -->
     <exclusions>
         <exclusion>
@@ -91,7 +91,6 @@ public class ExcelTestController extends BaseController{
      * 导入excel测试
      * @return
      */
-    @Log(module = "Excel",action = "导入Excel")
     @PostMapping("/import")
     @ResponseBody
     public R<List<TestPojo>> excelImport(MultipartFile file){
@@ -99,12 +98,12 @@ public class ExcelTestController extends BaseController{
             //excel文件名
             Excel<TestPojo> excel = new Excel<>(TestPojo.class);
             // 打印error信息
-            excel.setError(error -> System.out.println(error));
+            //excel.setError(error -> System.out.println(error));
             //List<TestPojo> pojoList = excel.read("d:/test.xls");
             InputStream inputStream = file.getInputStream();
-            List<TestPojo> pojoList = excel.read(inputStream);
+            List<TestPojo> pojoList = excel.setError(error -> System.out.println(error)).setSkip(true).read(inputStream);
             // 或者使用静态方法
-            //Excel.type(TestPojo.class).read(file.getInputStream());
+            //Excel.type(TestPojo.class).setError(error -> System.out.println(error)).setSkip(true).read(file.getInputStream());
             return R.ok(pojoList);
         }catch (Exception e){
             return R.error(e.getMessage());
@@ -115,7 +114,6 @@ public class ExcelTestController extends BaseController{
      * 导出excel测试
      * @return
      */
-    @Log(module = "Excel",action = "导出Excel")
     @GetMapping("/export")
     public void export(HttpServletResponse response) throws Exception {
         //获取数据
@@ -132,13 +130,11 @@ public class ExcelTestController extends BaseController{
         }
         //excel文件名
         //Excel<TestPojo> excel = new Excel<>(TestPojo.class);
-        //excel.export(response,"用户信息表",list);
-        // 也可以直接使用静态方法
-        //Excel.type(TestPojo.class).export(response,"用户信息表",list);
-        Excel<TestPojo> excel = new Excel<>(TestPojo.class);
         // 打印error信息
-        excel.setError(error -> System.out.println(error));
-        excel.export(response, "用户信息表", data);
+        //excel.setError(error -> System.out.println(error));
+        //excel.export(response, "用户信息表", data);
+        // 也可以直接使用静态方法
+        Excel.type(TestPojo.class).setError(error -> System.out.println(error)).setSkip(true).export(response,"用户信息表",list);
     }
 }
 ```
@@ -151,7 +147,7 @@ public class ExcelTestController extends BaseController{
 public class AgeHandler implements ExcelHandlerAdapter {
 
     @Override
-    public Object format(Object value,byte[] fileStream) {
+    public Object format(Integer rowIndex,Integer colIndex,Object value,byte[] fileStream) {
         System.out.println("------年龄数据处理器执行了，参数"+value);
         return 100;
     }
@@ -178,7 +174,7 @@ private String img;
 public class ImgHandler implements ExcelHandlerAdapter {
 
     @Override
-    public Object format(Object value,byte[] fileStream) {
+    public Object format(Integer rowIndex,Integer colIndex,Object value,byte[] fileStream) {
         System.out.println("------图片数据处理器执行了------");
         String fileName = this.getImageFileName(fileStream);
         String path = "d:\\f\\"+fileName;
