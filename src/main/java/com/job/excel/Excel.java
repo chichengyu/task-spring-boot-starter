@@ -200,7 +200,7 @@ public class Excel<T> {
                                     if (image == null) {
                                         val = "";
                                     } else {
-                                        val = dataFormatHandlerAdapter(null,image.getData(),excelColumn,rowNum);
+                                        val = dataFormatHandlerAdapter(null,image.getData(),excelColumn,rowNum,i);
                                     }
                                 }
                                 if (val == null || "".equals(val)){
@@ -226,7 +226,7 @@ public class Excel<T> {
                                 }
                                 try {
                                     if (ExcelColumn.ColumnType.FILE != excelColumn.cellType() && !excelColumn.handler().equals(ExcelHandlerAdapter.class)){
-                                        val = dataFormatHandlerAdapter(val,null,excelColumn,rowNum);
+                                        val = dataFormatHandlerAdapter(val,null,excelColumn,rowNum,i);
                                     }
                                     if (String.class == fieldType){
                                         field.set(t,val.toString());
@@ -438,6 +438,9 @@ public class Excel<T> {
         }
         //创建内容
         for (int i = 0,length = data.size(); i < length; i++){
+            if (!skip && isError){
+                return workbook;
+            }
             row1 = sheet.createRow(i + 2);
             T t = data.get(i);
             int k = 0;
@@ -453,6 +456,7 @@ public class Excel<T> {
                     // 设置列宽
                     sheet.setColumnWidth(k,(int)((excelColumn.width() + 0.72) * 256));
                     //将内容按顺序赋给对应列对象
+                    int colIndx = k;
                     Cell cell = row1.createCell(k++);
                     cell.setCellStyle(gridStyle.get(field.getName()));
                     field.setAccessible(true);
@@ -481,7 +485,7 @@ public class Excel<T> {
                             continue;
                         }
                         if (ExcelColumn.ColumnType.FILE != excelColumn.cellType() && !excelColumn.handler().equals(ExcelHandlerAdapter.class)){
-                            cell.setCellValue(toStr(dataFormatHandlerAdapter(val,null,excelColumn,i),excelColumn.defaultValue()));
+                            cell.setCellValue(toStr(dataFormatHandlerAdapter(val,null,excelColumn,i,colIndx),excelColumn.defaultValue()));
                             continue;
                         }
                         if (String.class == fieldType){
@@ -720,11 +724,11 @@ public class Excel<T> {
      * @param row 第几行
      * @return
      */
-    public Object dataFormatHandlerAdapter(Object value,byte[] fileStream, ExcelColumn excelColumn,int row) {
+    public Object dataFormatHandlerAdapter(Object value,byte[] fileStream, ExcelColumn excelColumn,Integer row,Integer col) {
         try {
             Object instance = excelColumn.handler().newInstance();
-            Method formatMethod = excelColumn.handler().getMethod("format", new Class[] { Object.class,byte[].class });
-            value = formatMethod.invoke(instance, value,fileStream);
+            Method formatMethod = excelColumn.handler().getMethod("format", new Class[] { Integer.class,Integer.class,Object.class,byte[].class });
+            value = formatMethod.invoke(instance, row+1,col+1,value,fileStream);
         } catch (Exception e) {
             this.isError = true;
             String message = e.getMessage();
@@ -732,7 +736,7 @@ public class Excel<T> {
                 message = e.getCause().getMessage();
             }
             if (error != null){
-                error.accept("第["+row+"]行,["+excelColumn.handler().getName()+"]格式化数据异常,Error:"+message);
+                error.accept("第["+(row+1)+"]行,["+excelColumn.name()+"]["+excelColumn.handler().getName()+"]格式化数据异常,Error:"+message);
             }
         }
         return value;
@@ -973,7 +977,7 @@ public class Excel<T> {
                 message = e.getCause().getMessage();
             }
             if (error != null){
-                error.accept("第["+row+"]行,["+excelColumn.name()+"]获取文件路径异常,Error:"+message);
+                error.accept("第["+(row+3)+"]行,["+excelColumn.name()+"]获取文件路径异常,Error:"+message);
             }
         } finally {
             if (in != null){

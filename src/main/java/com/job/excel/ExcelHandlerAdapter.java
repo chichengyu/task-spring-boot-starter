@@ -1,5 +1,6 @@
 package com.job.excel;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.UUID;
@@ -12,11 +13,13 @@ public interface ExcelHandlerAdapter {
 
     /**
      * 格式化
+     * @param rowIndex 第几行
+     * @param colIndex 第几列
      * @param value 单元格数据值(列为文件时,为null)
      * @param fileStream 文件流(列为文件时,存在)
      * @return 处理后的值
      */
-    Object format(Object value,byte[] fileStream);
+    Object format(Integer rowIndex,Integer colIndex,Object value,byte[] fileStream);
 
     /**
      * 获取图像文件名称
@@ -52,6 +55,11 @@ public interface ExcelHandlerAdapter {
      * @param filePath 文件路径
      */
     default void writeBytesToFile(byte[] fileStream,String filePath) throws IOException {
+        File file = new File(filePath);
+        if (!file.getParentFile().exists()){
+            file.setWritable(true);
+            file.getParentFile().mkdirs();
+        }
         FileOutputStream out = new FileOutputStream(filePath);
         out.write(fileStream);
         out.close();
