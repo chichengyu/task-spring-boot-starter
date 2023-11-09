@@ -76,13 +76,25 @@ public class Excel<T> {
     private Class<T> clazz;
     private Field[] fields;
     private Consumer<String> error;
+    private boolean skip = true;// 出现异常后是否跳过，不跳过则立即停止,默认跳过
+    private boolean isError = false;
+
+    public boolean isSkip() {
+        return skip;
+    }
+
+    public Excel<T> setSkip(boolean skip) {
+        this.skip = skip;
+        return this;
+    }
 
     public Consumer<String> getError() {
         return error;
     }
 
-    public void setError(Consumer<String> error) {
+    public Excel<T> setError(Consumer<String> error) {
         this.error = error;
+        return this;
     }
 
     @FunctionalInterface
@@ -174,6 +186,9 @@ public class Excel<T> {
                     for (int i = 0, leng = coloumVals.size(); i < leng; i++) {
                         String attrVal = coloumVals.get(i);
                         for (Field field : this.fields){
+                            if (!skip && isError){
+                                return backList;
+                            }
                             String attrPojo = field.getName();
                             if (field.isAnnotationPresent(ExcelColumn.class) && attrVal.equals(attrPojo)){
                                 ExcelColumn excelColumn = field.getAnnotation(ExcelColumn.class);
@@ -234,7 +249,18 @@ public class Excel<T> {
                                         field.set(t,val);
                                     }
                                 }catch (Exception e){
-                                    throw new RuntimeException("第"+(rowNum+1)+"行"+ excelColumn.name()+"列非法字符或值错误");
+                                    this.isError = true;
+                                    String message = e.getMessage();
+                                    if (message==null || "".equals(message)){
+                                        message = e.getCause().getMessage();
+                                    }
+                                    if (skip){
+                                        if (null != this.error){
+                                            this.error.accept("第"+(rowNum+1)+"行"+ excelColumn.name()+"列非法字符或值错误:"+message);
+                                        }
+                                    }else {
+                                        throw new RuntimeException("第"+(rowNum+1)+"行"+ excelColumn.name()+"列非法字符或值错误:"+message);
+                                    }
                                 }
                             }
                         }
@@ -276,6 +302,14 @@ public class Excel<T> {
                 value = cell.getErrorCellValue();
             }
         }catch (Exception e){
+            this.isError = true;
+            String message = e.getMessage();
+            if (message==null || "".equals(message)){
+                message = e.getCause().getMessage();
+            }
+            if (null != this.error){
+                this.error.accept("第["+cell.getRowIndex()+"]行"+cell.getColumnIndex()+"列,获取单元格值异常"+message);
+            }
             return value;
         }
         return value;
@@ -408,6 +442,9 @@ public class Excel<T> {
             T t = data.get(i);
             int k = 0;
             for (Field field : this.fields){
+                if (!skip && isError){
+                    return workbook;
+                }
                 if (field.isAnnotationPresent(ExcelColumn.class)){
                     ExcelColumn excelColumn = field.getAnnotation(ExcelColumn.class);
                     if (!excelColumn.autoHeight()){
@@ -689,6 +726,7 @@ public class Excel<T> {
             Method formatMethod = excelColumn.handler().getMethod("format", new Class[] { Object.class,byte[].class });
             value = formatMethod.invoke(instance, value,fileStream);
         } catch (Exception e) {
+            this.isError = true;
             String message = e.getMessage();
             if (message==null || "".equals(message)){
                 message = e.getCause().getMessage();
@@ -929,6 +967,7 @@ public class Excel<T> {
             }
             return toByteArray(in);
         } catch (Exception e) {
+            this.isError = true;
             String message = e.getMessage();
             if (message==null || "".equals(message)){
                 message = e.getCause().getMessage();
