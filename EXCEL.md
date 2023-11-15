@@ -11,7 +11,7 @@ Excel的工具类，方便导入与导出,提供三个注解
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>2.1.3.RELEASE</version>
+    <version>2.2.0.RELEASE</version>
     <!-- 排除多余 quartz  -->
     <exclusions>
         <exclusion>
@@ -21,12 +21,12 @@ Excel的工具类，方便导入与导出,提供三个注解
     </exclusions>
 </dependency>
 ```
-如果只是使用` 2.1.3.RELEASE ` 版本的 ` task定时任务`，可以参考下面导包坐标(排除多余依赖)，也可以直接使用之前版本[1.3.3.RELEASE](https://github.com/chichengyu/task-spring-boot-starter)(`只包含定时任务依赖`)，虽然不排除也没什么影响，但可以使项目体量小一些，导包
+如果只是使用` 2.2.0.RELEASE ` 版本的 ` task定时任务`，可以参考下面导包坐标(排除多余依赖)，也可以直接使用之前版本[1.3.3.RELEASE](https://github.com/chichengyu/task-spring-boot-starter)(`只包含定时任务依赖`)，虽然不排除也没什么影响，但可以使项目体量小一些，导包
 ```
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>2.1.3.RELEASE</version>
+    <version>2.2.0.RELEASE</version>
     <!-- 排除多余 excel -->
     <exclusions>
         <exclusion>
@@ -162,7 +162,7 @@ private String img;
 ```
 
 ###### 导出
-导出很简单，在文件路径字段上,配置注解` @ExcelColumn(name = "图片",cellType = ExcelColumn.ColumnType.FILE) `,即可完成，然后在导出的数据里设置文件路径字段(注：路径可以是本地路径,也可以是网络图片路径,总之路径能正常访问到文件即可)，即可实现导出图片到excel。
+导出很简单，在文件路径字段上,配置注解` @ExcelColumn(name = "图片",cellType = ExcelColumn.ColumnType.FILE) `,即可完成，然后在导出的数据里设置数据(注：路径可以是本地路径,也可以是网络图片路径,总之路径能正常访问到文件即可)，即可实现导出图片到excel。
 
 ###### 导入
 导入也很简单，首先，配置注解` @ExcelColumn(name = "图片",handler = ImgHandler.class,cellType = ExcelColumn.ColumnType.FILE) `,然后创建图片数据处理器` ImgHandler.java `并实现接口` ExcelHandlerAdapter `,且实现方法` format `方法，如下：

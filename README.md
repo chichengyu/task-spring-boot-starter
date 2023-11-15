@@ -10,7 +10,7 @@
         <img src="https://img.shields.io/badge/version-1.3.3.RELEASE-orange" alt="version-1.3.3.RELEASE" />
     </a>
     <a href="https://github.com/chichengyu/task-spring-boot-starter">
-        <img src="https://img.shields.io/badge/last version-2.1.3.RELEASE-green" alt="version-2.1.3.RELEASE" />
+        <img src="https://img.shields.io/badge/last version-2.2.0.RELEASE-green" alt="version-2.2.0.RELEASE" />
     </a>
 </p>
 
@@ -18,7 +18,7 @@
 自定义spring定时任务starter，sql可执行创建表。有两种使用方式：   
  - :heavy_check_mark: 方式1: [spring中的 TaskScheduler](#spring中的TaskScheduler) ` (持久化时执行 sql/job.sql) `
  - :heavy_check_mark: 方式2: [Quartz 任务调度框架](#Quartz任务调度框架) ` (持久化时执行 sql/quartz.sql )`
- - 其他工具类：[Excel工具类(2.1.3.RELEASE版本集成)](https://github.com/chichengyu/task-spring-boot-starter/blob/main/EXCEL.md)
+ - 其他工具类：[Excel工具类(2.2.0.RELEASE版本集成)](https://github.com/chichengyu/task-spring-boot-starter/blob/main/EXCEL.md)
 
 :warning:注：sql文件 ` job_task 任务表`/ ` job_task_log 任务日志表`，需要持久化的可以创建表，在添加任务的同时插入表中。
 
@@ -50,11 +50,11 @@ logging:
     <version>1.3.3.RELEASE</version>
 </dependency>
 
-<!-- 2.1.3.RELEASE集成 Quartz（只使用定时器，排除excel） -->
+<!-- 2.2.0.RELEASE集成 Quartz（只使用定时器，排除excel） -->
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>2.1.3.RELEASE</version>
+    <version>2.2.0.RELEASE</version>
     <!-- 排除多余 excel -->
     <exclusions>
         <exclusion>
@@ -90,7 +90,7 @@ public class TestTask implements ITask<String> {
 ### [spring中的TaskScheduler](#使用说明)
 :pushpin: 引入依赖,:lollipop:排除多余的 ` Quartz 依赖`,:lollipop:也可以引入之前的 ` 1.2.7.RELEASE `版本
 ```
-<!-- 1.3.3.RELEASE开始集成 Quartz（2.1.3.RELEASE也如此引入） -->
+<!-- 1.3.3.RELEASE开始集成 Quartz（2.2.0.RELEASE也如此引入） -->
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
@@ -104,11 +104,11 @@ public class TestTask implements ITask<String> {
     </exclusions>
 </dependency>
 
-<!-- 2.1.3.RELEASE -->
+<!-- 2.2.0.RELEASE -->
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>2.1.3.RELEASE</version>
+    <version>2.2.0.RELEASE</version>
     <!-- 方式一(spring中的TaskScheduler)，排除 Quartz 与 excel -->
     <exclusions>
         <exclusion>
@@ -195,11 +195,11 @@ public class TestController {
 ### [Quartz任务调度框架](#使用说明)
 引包
 ```
-<!-- 2.1.3.RELEASE -->
+<!-- 2.2.0.RELEASE -->
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>2.1.3.RELEASE</version>
+    <version>2.2.0.RELEASE</version>
     <!-- 方式二(Quartz)，排除 excel -->
     <exclusions>
         <exclusion>
