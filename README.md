@@ -32,6 +32,16 @@ logging:
 重启项目，可以看到控制台任务` debug `日志已经打印了。:rocket::rocket::rocket::rocket::rocket::rocket:
 
 #### 使用说明
+最新版本
+```
+<!-- 使用spring中的 TaskScheduler -->
+<dependency>
+    <groupId>io.github.chichengyu</groupId>
+    <artifactId>task-spring-boot-starter</artifactId>
+    <version>2.2.0.RELEASE</version>
+</dependency>
+```
+
 :lollipop:使用很简单，项目里引入坐标，`1.2.7.RELEASE `(使用spring自带的 ` TaskScheduler `,没有集成 ` Quartz `)
 ```
 <!-- 使用spring中的 TaskScheduler -->
