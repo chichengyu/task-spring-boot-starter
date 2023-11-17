@@ -219,6 +219,30 @@ public class TestController {
 </dependency>
 ```
 :pushpin: 创建一个配置文件 ` TaskQuartzConfig.java `
+###### 基本使用配置
+```
+@Slf4j
+@Configuration
+public class TaskConfig {
+
+    /**
+     * 创建一个 TaskQuartzManager 用于管理任务
+     * @return
+     */
+    @Bean
+    public TaskQuartzManager taskQuartzManager(SchedulerFactoryBean schedulerFactoryBean){
+        // 把任务日志保存到数据库
+        //TaskQuartzManager taskQuartzManager = new TaskQuartzManager(jobTaskLog -> jobTaskLogDao.save(jobTaskLog));
+        TaskQuartzManager taskQuartzManager = new TaskQuartzManager();
+        taskQuartzManager.setSchedulerFactoryBean(schedulerFactoryBean);
+        taskQuartzManager.setJobTaskLogSave(jobTaskLog -> log.info("日志，[{}]",JsonUtil.toJson(jobTaskLog)));// 此处可以把任务日志保存到数据库
+        //taskQuartzManager.setJobNamePrefix("aaaa_");// 可设置任务名称前缀
+        taskQuartzManager.init();// 初始化
+        return taskQuartzManager;
+    }
+}
+```
+###### 持久化配置(不需要则不配置)
 ```
 @Slf4j
 @Configuration
