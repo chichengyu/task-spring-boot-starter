@@ -32,9 +32,8 @@ logging:
 重启项目，可以看到控制台任务` debug `日志已经打印了。:rocket::rocket::rocket::rocket::rocket::rocket:
 
 #### 使用说明
-最新版本
+最新版本``` 2.2.0.RELEASE ```
 ```
-<!-- 使用spring中的 TaskScheduler -->
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
