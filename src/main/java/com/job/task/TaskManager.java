@@ -153,7 +153,6 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
         jobLog.setCreateTime(new Date());
         long startTime = System.currentTimeMillis();
         try {
-            LOGGER.debug("任务[{}]准备执行", jobTask.getJobId());
             Object target = applicationContext.getBean(jobTask.getBeanName());
             Method method = target.getClass().getDeclaredMethod("run", String.class);
             R<?> result = (R<?>)method.invoke(target, JsonUtil.toJson(jobTask));
@@ -168,12 +167,16 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
             LOGGER.debug("任务[{}]执行完毕,耗时:{}毫秒", jobTask.getJobId(),times);
         }catch (Exception e){
             LOGGER.error("任务[{}]执行失败,异常信息:{}", jobTask.getJobId(),e);
+            String message = e.getMessage();
+            if (message==null || "".equals(message)){
+                message = e.getCause().getMessage();
+            }
             // 任务执行时长
             long times = System.currentTimeMillis() - startTime;
             // 任务状态    0：成功  1：失败  记录数据库
             jobLog.setTimes((int)times);
             jobLog.setStatus(1);
-            jobLog.setError(e.toString());
+            jobLog.setError(message);
         }finally {
             // final save db
             if (jobTaskLogSave != null){
