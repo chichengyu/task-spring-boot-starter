@@ -6,7 +6,7 @@
 
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>2.2.0.RELEASE</version>
+    <version>2.2.1.RELEASE</version>
     <packaging>jar</packaging>
     <name>task-spring-boot-starter</name>
     <url>https://github.com/chichengyu/task-spring-boot-starter</url>
