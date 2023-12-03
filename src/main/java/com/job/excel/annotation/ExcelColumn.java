@@ -23,6 +23,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ExcelColumn {
     /**
+     * 排序
+     */
+    int sort() default 0;
+
+    /**
      * 名称
      */
     String name();

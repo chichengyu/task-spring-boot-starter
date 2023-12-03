@@ -57,6 +57,8 @@ import java.net.URLEncoder;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -109,7 +111,9 @@ public class Excel<T> {
 
     public Excel(Class<T> clazz){
         this.clazz = clazz;
-        this.fields = clazz.getDeclaredFields();
+        List<Field> fieldList = new ArrayList<>(Arrays.asList(clazz.getSuperclass().getDeclaredFields()));
+        fieldList.addAll(Arrays.asList(clazz.getDeclaredFields()));
+        this.fields = fieldList.stream().filter(o -> o.isAnnotationPresent(ExcelColumn.class)).sorted(Comparator.comparing(i -> i.getAnnotation(ExcelColumn.class).sort())).toArray(Field[]::new);
     }
 
     public static <T>Excel<T> type(Class<T> clazz){
@@ -408,7 +412,9 @@ public class Excel<T> {
             }
         }
         //创建标题合并行
-        sheet.addMergedRegion(new CellRangeAddress(0,(short)0,0,(short)headers.size() - 1));
+        if (headers.size() > 1){
+            sheet.addMergedRegion(new CellRangeAddress(0,(short)0,0,(short)headers.size() - 1));
+        }
         //产生标题行
         /*HSSFRow hssfRow = hssfSheet.createRow(0);
         HSSFCell cell = hssfRow.createCell(0);
