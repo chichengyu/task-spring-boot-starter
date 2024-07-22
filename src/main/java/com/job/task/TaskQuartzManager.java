@@ -2,7 +2,6 @@ package com.job.task;
 
 import com.job.task.pojo.JobTask;
 import com.job.task.pojo.JobTaskLog;
-import com.job.util.JsonUtil;
 import com.job.util.R;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
@@ -271,7 +270,7 @@ public class TaskQuartzManager extends ApplicationObjectSupport {
                 //执行任务
                 Object target = applicationContext.getBean(jobTask.getBeanName());
                 Method method = target.getClass().getDeclaredMethod("run", String.class);
-                R<?> result = (R<?>)method.invoke(target, JsonUtil.toJson(jobTask));
+                R<?> result = (R<?>)method.invoke(target, jobTask.getParams());
                 // 任务执行时长
                 long times = System.currentTimeMillis() - startTime;
                 //任务状态    0：成功    1：失败
