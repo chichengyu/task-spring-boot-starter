@@ -10,6 +10,9 @@
         <img src="https://img.shields.io/badge/version-1.3.3.RELEASE-orange" alt="version-1.3.3.RELEASE" />
     </a>
     <a href="https://github.com/chichengyu/task-spring-boot-starter">
+            <img src="https://img.shields.io/badge/last version-2.2.2.RELEASE-green" alt="version-2.2.2.RELEASE" />
+        </a>
+    <a href="https://github.com/chichengyu/task-spring-boot-starter">
         <img src="https://img.shields.io/badge/last version-2.2.3.RELEASE-green" alt="version-2.2.3.RELEASE" />
     </a>
 </p>
