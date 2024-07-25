@@ -1,5 +1,6 @@
 package com.job.task;
 
+import com.alibaba.fastjson.JSON;
 import com.job.task.pojo.JobTask;
 import com.job.task.pojo.JobTaskLog;
 import com.job.util.R;
@@ -154,7 +155,7 @@ public class TaskManager extends ApplicationObjectSupport implements DisposableB
         try {
             Object target = applicationContext.getBean(jobTask.getBeanName());
             Method method = target.getClass().getDeclaredMethod("run", String.class);
-            R<?> result = (R<?>)method.invoke(target, ITask.OBJECT_MAPPER.writeValueAsString(jobTask));
+            R<?> result = (R<?>)method.invoke(target, JSON.toJSONString(jobTask));
             // 任务执行时长
             long times = System.currentTimeMillis() - startTime;
             jobLog.setTimes((int) times);
