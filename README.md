@@ -37,7 +37,7 @@ logging:
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>2.2.4.RELEASE</version>
+    <version>2.2.5.RELEASE</version>
 </dependency>
 ```
 
@@ -59,11 +59,11 @@ logging:
     <version>1.3.3.RELEASE</version>
 </dependency>
 
-<!-- 2.2.4.RELEASE集成 Quartz（只使用定时器，排除excel） -->
+<!-- 2.2.5.RELEASE集成 Quartz（只使用定时器，排除excel） -->
 <dependency>
     <groupId>io.github.chichengyu</groupId>
     <artifactId>task-spring-boot-starter</artifactId>
-    <version>2.2.4.RELEASE</version>
+    <version>2.2.5.RELEASE</version>
     <!-- 排除多余 excel -->
     <exclusions>
         <exclusion>
