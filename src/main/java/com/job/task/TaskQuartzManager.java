@@ -1,6 +1,5 @@
 package com.job.task;
 
-import com.alibaba.fastjson.JSON;
 import com.job.task.pojo.JobTask;
 import com.job.task.pojo.JobTaskLog;
 import com.job.util.R;
@@ -271,7 +270,7 @@ public class TaskQuartzManager extends ApplicationObjectSupport {
                 //执行任务
                 Object target = applicationContext.getBean(jobTask.getBeanName());
                 Method method = target.getClass().getDeclaredMethod("run", String.class);
-                R<?> result = (R<?>)method.invoke(target, JSON.toJSONString(jobTask));
+                R<?> result = (R<?>)method.invoke(target, ITask.OBJECT_MAPPER.writeValueAsString(jobTask));
                 // 任务执行时长
                 long times = System.currentTimeMillis() - startTime;
                 //任务状态    0：成功    1：失败
